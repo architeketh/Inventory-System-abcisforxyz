@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>abc_isfor_xyz - Inventory Management System</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
     <style>
         * {
             margin: 0;
@@ -632,10 +633,28 @@
                     </div>
                 </div>
 
-                <h3 style="margin-bottom: 10px; font-size: 1.1em;">Recent Inventory</h3>
-                <div class="search-box">
-                    <input type="text" id="dashboard-search" placeholder="Search inventory..." onkeyup="filterDashboard()">
+                <h3 style="margin-bottom: 10px; font-size: 1.1em;">Inventory Items</h3>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <div class="search-box" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                        <input type="text" id="dashboard-search" placeholder="Search inventory..." onkeyup="filterDashboard()">
+                    </div>
+                    <select id="dashboard-category-filter" onchange="filterDashboard()" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; min-width: 150px;">
+                        <option value="">All Categories</option>
+                    </select>
                 </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; color: #666;">
+                    <div>
+                        Showing <strong id="dashboard-showing">0</strong> of <strong id="dashboard-total">0</strong> items
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-sm btn-secondary" onclick="changeDashboardPage(-1)" id="dashboard-prev">← Prev</button>
+                        <span style="padding: 5px 10px;">Page <strong id="dashboard-page">1</strong></span>
+                        <button class="btn btn-sm btn-secondary" onclick="changeDashboardPage(1)" id="dashboard-next">Next →</button>
+                    </div>
+                </div>
+
                 <div class="table-wrapper">
                     <table class="inventory-table" id="dashboard-table">
                         <thead>
@@ -666,9 +685,26 @@
                     </button>
                 </div>
 
-                <div class="search-box">
-                    <input type="text" id="inventory-search" placeholder="Search inventory..." onkeyup="filterInventory()">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <div class="search-box" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                        <input type="text" id="inventory-search" placeholder="Search inventory..." onkeyup="filterInventory()">
+                    </div>
+                    <select id="inventory-category-filter" onchange="filterInventory()" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; min-width: 150px;">
+                        <option value="">All Categories</option>
+                    </select>
                 </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; color: #666;">
+                    <div>
+                        Showing <strong id="inventory-showing">0</strong> of <strong id="inventory-total">0</strong> items
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-sm btn-secondary" onclick="changeInventoryPage(-1)" id="inventory-prev">← Prev</button>
+                        <span style="padding: 5px 10px;">Page <strong id="inventory-page">1</strong></span>
+                        <button class="btn btn-sm btn-secondary" onclick="changeInventoryPage(1)" id="inventory-next">Next →</button>
+                    </div>
+                </div>
+
                 <div class="table-wrapper">
                     <table class="inventory-table">
                         <thead>
@@ -952,6 +988,11 @@
         // Initialize inventory from localStorage
         let inventory = JSON.parse(localStorage.getItem('abc_inventory')) || [];
         let nextId = parseInt(localStorage.getItem('abc_next_id')) || 1;
+        
+        // Pagination variables
+        let dashboardPage = 1;
+        let inventoryPage = 1;
+        const itemsPerPage = 20;
 
         // Generate 6-digit barcode
         function generateBarcode(id) {
@@ -1098,10 +1139,70 @@
             const tbody = document.getElementById('dashboard-tbody');
             tbody.innerHTML = '';
 
-            inventory.slice().reverse().slice(0, 15).forEach(item => {
+            // Get filters
+            const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
+            const categoryFilter = document.getElementById('dashboard-category-filter').value;
+
+            // Filter inventory
+            let filteredItems = inventory.filter(function(item) {
+                const matchesSearch = !searchTerm || 
+                    item.description.toLowerCase().includes(searchTerm) ||
+                    item.category.toLowerCase().includes(searchTerm) ||
+                    item.brand.toLowerCase().includes(searchTerm) ||
+                    generateBarcode(item.id).includes(searchTerm);
+                
+                const matchesCategory = !categoryFilter || item.category === categoryFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+
+            // Pagination
+            const totalItems = filteredItems.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIdx = (dashboardPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageItems = filteredItems.slice(startIdx, endIdx);
+
+            // Render items
+            pageItems.forEach(function(item) {
                 const row = createInventoryRow(item, false);
                 tbody.appendChild(row);
             });
+
+            // Update pagination info
+            document.getElementById('dashboard-showing').textContent = pageItems.length;
+            document.getElementById('dashboard-total').textContent = totalItems;
+            document.getElementById('dashboard-page').textContent = dashboardPage + ' of ' + totalPages;
+            
+            // Enable/disable pagination buttons
+            document.getElementById('dashboard-prev').disabled = dashboardPage === 1;
+            document.getElementById('dashboard-next').disabled = dashboardPage >= totalPages || totalPages === 0;
+        }
+
+        // Change dashboard page
+        function changeDashboardPage(direction) {
+            const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
+            const categoryFilter = document.getElementById('dashboard-category-filter').value;
+
+            let filteredItems = inventory.filter(function(item) {
+                const matchesSearch = !searchTerm || 
+                    item.description.toLowerCase().includes(searchTerm) ||
+                    item.category.toLowerCase().includes(searchTerm) ||
+                    item.brand.toLowerCase().includes(searchTerm) ||
+                    generateBarcode(item.id).includes(searchTerm);
+                
+                const matchesCategory = !categoryFilter || item.category === categoryFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+
+            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+            
+            dashboardPage += direction;
+            if (dashboardPage < 1) dashboardPage = 1;
+            if (dashboardPage > totalPages) dashboardPage = totalPages;
+            
+            renderDashboardTable();
         }
 
         // Render inventory table
@@ -1109,10 +1210,70 @@
             const tbody = document.getElementById('inventory-tbody');
             tbody.innerHTML = '';
 
-            inventory.forEach(item => {
+            // Get filters
+            const searchTerm = document.getElementById('inventory-search').value.toLowerCase();
+            const categoryFilter = document.getElementById('inventory-category-filter').value;
+
+            // Filter inventory
+            let filteredItems = inventory.filter(function(item) {
+                const matchesSearch = !searchTerm || 
+                    item.description.toLowerCase().includes(searchTerm) ||
+                    item.category.toLowerCase().includes(searchTerm) ||
+                    item.brand.toLowerCase().includes(searchTerm) ||
+                    generateBarcode(item.id).includes(searchTerm);
+                
+                const matchesCategory = !categoryFilter || item.category === categoryFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+
+            // Pagination
+            const totalItems = filteredItems.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIdx = (inventoryPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const pageItems = filteredItems.slice(startIdx, endIdx);
+
+            // Render items
+            pageItems.forEach(function(item) {
                 const row = createInventoryRow(item, true);
                 tbody.appendChild(row);
             });
+
+            // Update pagination info
+            document.getElementById('inventory-showing').textContent = pageItems.length;
+            document.getElementById('inventory-total').textContent = totalItems;
+            document.getElementById('inventory-page').textContent = inventoryPage + ' of ' + totalPages;
+            
+            // Enable/disable pagination buttons
+            document.getElementById('inventory-prev').disabled = inventoryPage === 1;
+            document.getElementById('inventory-next').disabled = inventoryPage >= totalPages || totalPages === 0;
+        }
+
+        // Change inventory page
+        function changeInventoryPage(direction) {
+            const searchTerm = document.getElementById('inventory-search').value.toLowerCase();
+            const categoryFilter = document.getElementById('inventory-category-filter').value;
+
+            let filteredItems = inventory.filter(function(item) {
+                const matchesSearch = !searchTerm || 
+                    item.description.toLowerCase().includes(searchTerm) ||
+                    item.category.toLowerCase().includes(searchTerm) ||
+                    item.brand.toLowerCase().includes(searchTerm) ||
+                    generateBarcode(item.id).includes(searchTerm);
+                
+                const matchesCategory = !categoryFilter || item.category === categoryFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+
+            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+            
+            inventoryPage += direction;
+            if (inventoryPage < 1) inventoryPage = 1;
+            if (inventoryPage > totalPages) inventoryPage = totalPages;
+            
+            renderInventory();
         }
 
         // Create inventory row
@@ -1397,7 +1558,9 @@
             
             const categoryLists = ['category-list', 'edit-category-list'];
             const brandLists = ['brand-list', 'edit-brand-list'];
+            const categoryFilters = ['dashboard-category-filter', 'inventory-category-filter'];
             
+            // Update category datalists
             categoryLists.forEach(function(listId) {
                 const datalist = document.getElementById(listId);
                 datalist.innerHTML = '';
@@ -1408,6 +1571,7 @@
                 });
             });
 
+            // Update brand datalists
             brandLists.forEach(function(listId) {
                 const datalist = document.getElementById(listId);
                 datalist.innerHTML = '';
@@ -1416,6 +1580,20 @@
                     option.value = brand;
                     datalist.appendChild(option);
                 });
+            });
+
+            // Update category filters
+            categoryFilters.forEach(function(filterId) {
+                const select = document.getElementById(filterId);
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">All Categories</option>';
+                categories.sort().forEach(function(cat) {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    select.appendChild(option);
+                });
+                select.value = currentValue; // Restore previous selection
             });
         }
 
@@ -1512,23 +1690,13 @@
 
         // Search functions
         function filterDashboard() {
-            const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
-            const rows = document.getElementById('dashboard-tbody').getElementsByTagName('tr');
-            
-            Array.from(rows).forEach(function(row) {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
+            dashboardPage = 1; // Reset to first page when filtering
+            renderDashboardTable();
         }
 
         function filterInventory() {
-            const searchTerm = document.getElementById('inventory-search').value.toLowerCase();
-            const rows = document.getElementById('inventory-tbody').getElementsByTagName('tr');
-            
-            Array.from(rows).forEach(function(row) {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
+            inventoryPage = 1; // Reset to first page when filtering
+            renderInventory();
         }
 
         // Export data
@@ -1624,30 +1792,45 @@
 
             // Compress and encode the data
             const dataStr = JSON.stringify(inventory);
-            const encoded = btoa(encodeURIComponent(dataStr));
+            const compressed = LZString.compressToEncodedURIComponent(dataStr);
             
-            // Create share URL with data in hash
+            // Create share URL with compressed data in hash
             const baseUrl = window.location.origin + window.location.pathname;
-            const shareUrl = baseUrl + '#share=' + encoded;
+            const shareUrl = baseUrl + '#s=' + compressed;
             
             // Display the share link
             document.getElementById('share-link-url').value = shareUrl;
             document.getElementById('share-link-container').style.display = 'block';
             
-            // Generate QR code
+            // Generate QR code using qrcode-generator library
             const qrContainer = document.getElementById('qr-code-display');
             qrContainer.innerHTML = ''; // Clear previous QR code
             
-            new QRCode(qrContainer, {
-                text: shareUrl,
-                width: 200,
-                height: 200,
-                colorDark: "#667eea",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.L
-            });
+            try {
+                // Create QR code
+                const qr = qrcode(0, 'L'); // Type 0 = auto, error correction level L
+                qr.addData(shareUrl);
+                qr.make();
+                
+                // Create image element
+                const qrImage = qr.createImgTag(5, 10); // cell size 5, margin 10
+                qrContainer.innerHTML = qrImage;
+                
+                // Style the QR code
+                const img = qrContainer.querySelector('img');
+                if (img) {
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                }
+            } catch (error) {
+                console.error('QR Code generation error:', error);
+                qrContainer.innerHTML = '<p style="color: #d32f2f;">QR code generation failed. Please use the link above.</p>';
+            }
             
-            showAlert('Share link generated! Send to mobile device.', 'success');
+            const urlLength = shareUrl.length;
+            const savings = Math.round((1 - compressed.length / dataStr.length) * 100);
+            
+            showAlert('Share link generated! (' + savings + '% compressed)', 'success');
         }
 
         // Copy share link to clipboard
@@ -1673,11 +1856,12 @@
         function checkForSharedData() {
             const hash = window.location.hash;
             
-            if (hash.startsWith('#share=')) {
-                const encoded = hash.substring(7); // Remove '#share='
+            // Support both old format (#share=) and new format (#s=)
+            if (hash.startsWith('#s=')) {
+                const compressed = hash.substring(3); // Remove '#s='
                 
                 try {
-                    const decoded = decodeURIComponent(atob(encoded));
+                    const decoded = LZString.decompressFromEncodedURIComponent(compressed);
                     const sharedData = JSON.parse(decoded);
                     
                     if (Array.isArray(sharedData) && sharedData.length > 0) {
@@ -1702,6 +1886,39 @@
                             showAlert('Successfully imported ' + itemCount + ' items!', 'success');
                         } else {
                             // User declined, clear the hash
+                            window.location.hash = '';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error importing shared data:', error);
+                    showAlert('Error loading shared data. Link may be invalid.', 'error');
+                    window.location.hash = '';
+                }
+            } else if (hash.startsWith('#share=')) {
+                // Legacy support for old format
+                const encoded = hash.substring(7); // Remove '#share='
+                
+                try {
+                    const decoded = decodeURIComponent(atob(encoded));
+                    const sharedData = JSON.parse(decoded);
+                    
+                    if (Array.isArray(sharedData) && sharedData.length > 0) {
+                        const itemCount = sharedData.length;
+                        const message = 'Found ' + itemCount + ' items to import.\n\n' +
+                                      'This will replace your current data (' + inventory.length + ' items).\n\n' +
+                                      'Continue?';
+                        
+                        if (confirm(message)) {
+                            inventory = sharedData;
+                            nextId = Math.max.apply(Math, inventory.map(function(i) { return i.id; }).concat([0])) + 1;
+                            saveInventory();
+                            updateDashboard();
+                            renderInventory();
+                            renderReports();
+                            updateDropdownLists();
+                            window.location.hash = '';
+                            showAlert('Successfully imported ' + itemCount + ' items!', 'success');
+                        } else {
                             window.location.hash = '';
                         }
                     }
