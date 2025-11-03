@@ -979,7 +979,19 @@
                 <svg id="barcode"></svg>
                 <p style="margin-top: 10px; color: #667eea; font-weight: 600;">abc_isfor_xyz</p>
             </div>
-            <button class="btn btn-primary" onclick="printBarcode()">Print</button>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <p style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                    <strong>Available Quantity:</strong> <span id="barcode-quantity">0</span> units
+                </p>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="print-quantity" style="font-size: 13px;">Number of barcodes to print:</label>
+                    <input type="number" id="print-quantity" min="1" value="1" style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                </div>
+                <p style="font-size: 11px; color: #999; margin-top: 5px;">
+                    💡 Tip: Print one barcode per item for easy labeling
+                </p>
+            </div>
+            <button class="btn btn-primary" onclick="printBarcodes()">🖨️ Print Barcodes</button>
             <button class="btn btn-secondary" onclick="closeBarcodeModal()">Close</button>
         </div>
     </div>
@@ -1372,6 +1384,12 @@
             document.getElementById('barcode-item-info').textContent = 
                 item.description + ' - ' + item.brand;
 
+            // Display quantity
+            document.getElementById('barcode-quantity').textContent = item.quantity;
+            
+            // Set default print quantity to item quantity (or 1 if out of stock)
+            document.getElementById('print-quantity').value = Math.max(item.quantity, 1);
+
             JsBarcode("#barcode", barcode, {
                 format: "CODE128",
                 width: 2,
@@ -1387,16 +1405,55 @@
             document.getElementById('barcode-modal').classList.remove('active');
         }
 
-        function printBarcode() {
-            const barcodeContent = document.querySelector('#barcode-modal .barcode-display').innerHTML;
-            const printWindow = window.open('', '', 'width=600,height=400');
-            printWindow.document.write('<html><head><title>Print Barcode</title>');
-            printWindow.document.write('<style>body { text-align: center; padding: 20px; font-family: Arial, sans-serif; } svg { max-width: 100%; }</style>');
-            printWindow.document.write('</head><body>');
-            printWindow.document.write(barcodeContent);
+        function printBarcodes() {
+            const printQuantity = parseInt(document.getElementById('print-quantity').value);
+            
+            if (!printQuantity || printQuantity < 1) {
+                showAlert('Please enter a valid quantity (minimum 1)', 'error');
+                return;
+            }
+
+            // Get current barcode info
+            const barcodeInfo = document.getElementById('barcode-item-info').textContent;
+            const barcodeSvg = document.getElementById('barcode').outerHTML;
+            
+            const printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write('<html><head><title>Print Barcodes</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: Arial, sans-serif; padding: 20px; }');
+            printWindow.document.write('h2 { text-align: center; color: #667eea; margin-bottom: 30px; }');
+            printWindow.document.write('.barcode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }');
+            printWindow.document.write('.barcode-item { border: 2px dashed #ddd; padding: 15px; text-align: center; page-break-inside: avoid; }');
+            printWindow.document.write('.item-info { font-weight: 600; font-size: 13px; margin-bottom: 10px; word-wrap: break-word; }');
+            printWindow.document.write('.barcode-container { margin: 10px 0; }');
+            printWindow.document.write('.barcode-container svg { max-width: 100%; height: auto; }');
+            printWindow.document.write('.company-name { color: #667eea; font-weight: 600; font-size: 12px; margin-top: 5px; }');
+            printWindow.document.write('@media print { @page { margin: 0.5in; } .no-print { display: none; } }');
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write('<h2 class="no-print">abc_isfor_xyz - Printing ' + printQuantity + ' Barcode(s)</h2>');
+            printWindow.document.write('<div class="barcode-grid">');
+
+            // Generate the specified number of barcodes
+            for (let i = 0; i < printQuantity; i++) {
+                printWindow.document.write('<div class="barcode-item">');
+                printWindow.document.write('<div class="item-info">' + barcodeInfo + '</div>');
+                printWindow.document.write('<div class="barcode-container">');
+                printWindow.document.write(barcodeSvg);
+                printWindow.document.write('</div>');
+                printWindow.document.write('<div class="company-name">abc_isfor_xyz</div>');
+                printWindow.document.write('</div>');
+            }
+
+            printWindow.document.write('</div>');
             printWindow.document.write('</body></html>');
             printWindow.document.close();
-            printWindow.print();
+            
+            // Auto-print after a short delay
+            setTimeout(function() {
+                printWindow.print();
+            }, 500);
+            
+            showAlert('Preparing to print ' + printQuantity + ' barcode(s)...', 'success');
         }
 
         // Print all barcodes
@@ -1792,11 +1849,11 @@
 
             // Compress and encode the data
             const dataStr = JSON.stringify(inventory);
-            const compressed = LZString.compressToEncodedURIComponent(dataStr);
+            const compressed = LZString.compressToBase64(dataStr);
             
             // Create share URL with compressed data in hash
             const baseUrl = window.location.origin + window.location.pathname;
-            const shareUrl = baseUrl + '#s=' + compressed;
+            const shareUrl = baseUrl + '#d=' + compressed;
             
             // Display the share link
             document.getElementById('share-link-url').value = shareUrl;
@@ -1807,30 +1864,33 @@
             qrContainer.innerHTML = ''; // Clear previous QR code
             
             try {
-                // Create QR code
-                const qr = qrcode(0, 'L'); // Type 0 = auto, error correction level L
+                // Create QR code with smaller size
+                const qr = qrcode(0, 'M'); // Type 0 = auto, error correction level M (15% recovery)
                 qr.addData(shareUrl);
                 qr.make();
                 
-                // Create image element
-                const qrImage = qr.createImgTag(5, 10); // cell size 5, margin 10
+                // Create image with smaller cell size
+                const qrImage = qr.createImgTag(3, 4); // cell size 3px, margin 4px (smaller!)
                 qrContainer.innerHTML = qrImage;
                 
                 // Style the QR code
                 const img = qrContainer.querySelector('img');
                 if (img) {
-                    img.style.maxWidth = '100%';
+                    img.style.maxWidth = '250px';
                     img.style.height = 'auto';
+                    img.style.margin = '0 auto';
+                    img.style.display = 'block';
                 }
             } catch (error) {
                 console.error('QR Code generation error:', error);
                 qrContainer.innerHTML = '<p style="color: #d32f2f;">QR code generation failed. Please use the link above.</p>';
             }
             
-            const urlLength = shareUrl.length;
-            const savings = Math.round((1 - compressed.length / dataStr.length) * 100);
+            const originalLength = dataStr.length;
+            const compressedLength = compressed.length;
+            const savings = Math.round((1 - compressedLength / originalLength) * 100);
             
-            showAlert('Share link generated! (' + savings + '% compressed)', 'success');
+            showAlert('Share link generated! (' + savings + '% compressed, ' + shareUrl.length + ' chars)', 'success');
         }
 
         // Copy share link to clipboard
@@ -1856,16 +1916,15 @@
         function checkForSharedData() {
             const hash = window.location.hash;
             
-            // Support both old format (#share=) and new format (#s=)
-            if (hash.startsWith('#s=')) {
-                const compressed = hash.substring(3); // Remove '#s='
+            // Support new format (#d=) with base64 compression
+            if (hash.startsWith('#d=')) {
+                const compressed = hash.substring(3); // Remove '#d='
                 
                 try {
-                    const decoded = LZString.decompressFromEncodedURIComponent(compressed);
+                    const decoded = LZString.decompressFromBase64(compressed);
                     const sharedData = JSON.parse(decoded);
                     
                     if (Array.isArray(sharedData) && sharedData.length > 0) {
-                        // Show confirmation dialog
                         const itemCount = sharedData.length;
                         const message = 'Found ' + itemCount + ' items to import.\n\n' +
                                       'This will replace your current data (' + inventory.length + ' items).\n\n' +
@@ -1879,13 +1938,9 @@
                             renderInventory();
                             renderReports();
                             updateDropdownLists();
-                            
-                            // Clear the hash to prevent re-import on refresh
                             window.location.hash = '';
-                            
                             showAlert('Successfully imported ' + itemCount + ' items!', 'success');
                         } else {
-                            // User declined, clear the hash
                             window.location.hash = '';
                         }
                     }
@@ -1894,8 +1949,43 @@
                     showAlert('Error loading shared data. Link may be invalid.', 'error');
                     window.location.hash = '';
                 }
-            } else if (hash.startsWith('#share=')) {
-                // Legacy support for old format
+            }
+            // Support old format (#s=) with URI encoding
+            else if (hash.startsWith('#s=')) {
+                const compressed = hash.substring(3); // Remove '#s='
+                
+                try {
+                    const decoded = LZString.decompressFromEncodedURIComponent(compressed);
+                    const sharedData = JSON.parse(decoded);
+                    
+                    if (Array.isArray(sharedData) && sharedData.length > 0) {
+                        const itemCount = sharedData.length;
+                        const message = 'Found ' + itemCount + ' items to import.\n\n' +
+                                      'This will replace your current data (' + inventory.length + ' items).\n\n' +
+                                      'Continue?';
+                        
+                        if (confirm(message)) {
+                            inventory = sharedData;
+                            nextId = Math.max.apply(Math, inventory.map(function(i) { return i.id; }).concat([0])) + 1;
+                            saveInventory();
+                            updateDashboard();
+                            renderInventory();
+                            renderReports();
+                            updateDropdownLists();
+                            window.location.hash = '';
+                            showAlert('Successfully imported ' + itemCount + ' items!', 'success');
+                        } else {
+                            window.location.hash = '';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error importing shared data:', error);
+                    showAlert('Error loading shared data. Link may be invalid.', 'error');
+                    window.location.hash = '';
+                }
+            } 
+            // Legacy support for old format (#share=)
+            else if (hash.startsWith('#share=')) {
                 const encoded = hash.substring(7); // Remove '#share='
                 
                 try {
