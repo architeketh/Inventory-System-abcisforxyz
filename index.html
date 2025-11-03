@@ -964,106 +964,52 @@
             }
 
             const printWindow = window.open('', '', 'width=900,height=600');
-            let htmlContent = `
-                <html>
-                <head>
-                    <title>Print All Barcodes - abc_isfor_xyz</title>
-                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-                    <style>
-                        body { 
-                            font-family: Arial, sans-serif; 
-                            padding: 20px;
-                        }
-                        h1 {
-                            text-align: center;
-                            color: #667eea;
-                            margin-bottom: 30px;
-                        }
-                        .barcode-grid {
-                            display: grid;
-                            grid-template-columns: repeat(3, 1fr);
-                            gap: 20px;
-                        }
-                        .barcode-item {
-                            border: 2px dashed #ddd;
-                            padding: 15px;
-                            text-align: center;
-                            page-break-inside: avoid;
-                        }
-                        .item-name {
-                            font-weight: 600;
-                            font-size: 14px;
-                            margin-bottom: 5px;
-                        }
-                        .item-details {
-                            font-size: 12px;
-                            color: #666;
-                            margin: 3px 0;
-                        }
-                        .barcode-container {
-                            margin: 10px 0;
-                        }
-                        .company-name {
-                            color: #667eea;
-                            font-weight: 600;
-                            font-size: 12px;
-                            margin-top: 5px;
-                        }
-                        @media print {
-                            @page {
-                                margin: 0.5in;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h1>abc_isfor_xyz - All Inventory Barcodes</h1>
-                    <div class="barcode-grid">
-            `;
+            
+            printWindow.document.write('<html><head><title>Print All Barcodes - abc_isfor_xyz</title>');
+            printWindow.document.write('<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><' + '/script>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: Arial, sans-serif; padding: 20px; }');
+            printWindow.document.write('h1 { text-align: center; color: #667eea; margin-bottom: 30px; }');
+            printWindow.document.write('.barcode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }');
+            printWindow.document.write('.barcode-item { border: 2px dashed #ddd; padding: 15px; text-align: center; page-break-inside: avoid; }');
+            printWindow.document.write('.item-name { font-weight: 600; font-size: 14px; margin-bottom: 5px; }');
+            printWindow.document.write('.item-details { font-size: 12px; color: #666; margin: 3px 0; }');
+            printWindow.document.write('.barcode-container { margin: 10px 0; }');
+            printWindow.document.write('.company-name { color: #667eea; font-weight: 600; font-size: 12px; margin-top: 5px; }');
+            printWindow.document.write('@media print { @page { margin: 0.5in; } }');
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write('<h1>abc_isfor_xyz - All Inventory Barcodes</h1>');
+            printWindow.document.write('<div class="barcode-grid">');
 
             inventory.forEach((item, index) => {
                 const barcode = generateBarcode(item.id);
-                htmlContent += `
-                    <div class="barcode-item">
-                        <div class="item-name">${item.description}</div>
-                        <div class="item-details">${item.brand} - ${item.category}</div>
-                        <div class="item-details">$${item.price.toFixed(2)}</div>
-                        <div class="barcode-container">
-                            <svg id="barcode-${index}"></svg>
-                        </div>
-                        <div class="company-name">abc_isfor_xyz</div>
-                    </div>
-                `;
+                printWindow.document.write('<div class="barcode-item">');
+                printWindow.document.write('<div class="item-name">' + item.description + '</div>');
+                printWindow.document.write('<div class="item-details">' + item.brand + ' - ' + item.category + '</div>');
+                printWindow.document.write('<div class="item-details">$' + item.price.toFixed(2) + '</div>');
+                printWindow.document.write('<div class="barcode-container">');
+                printWindow.document.write('<svg id="barcode-' + index + '"></svg>');
+                printWindow.document.write('</div>');
+                printWindow.document.write('<div class="company-name">abc_isfor_xyz</div>');
+                printWindow.document.write('</div>');
             });
 
-            htmlContent += `
-                    </div>
-                    <script>
-            `;
+            printWindow.document.write('</div>');
+            printWindow.document.write('<script>');
 
             inventory.forEach((item, index) => {
                 const barcode = generateBarcode(item.id);
-                htmlContent += `
-                    JsBarcode("#barcode-${index}", "${barcode}", {
-                        format: "CODE128",
-                        width: 1.5,
-                        height: 60,
-                        displayValue: true,
-                        fontSize: 12
-                    });
-                `;
+                printWindow.document.write('JsBarcode("#barcode-' + index + '", "' + barcode + '", {');
+                printWindow.document.write('format: "CODE128",');
+                printWindow.document.write('width: 1.5,');
+                printWindow.document.write('height: 60,');
+                printWindow.document.write('displayValue: true,');
+                printWindow.document.write('fontSize: 12');
+                printWindow.document.write('});');
             });
 
-            htmlContent += `
-                        setTimeout(function() {
-                            window.print();
-                        }, 500);
-                    </script>
-                </body>
-                </html>
-            `;
-
-            printWindow.document.write(htmlContent);
+            printWindow.document.write('setTimeout(function() { window.print(); }, 500);');
+            printWindow.document.write('<' + '/script></body></html>');
             printWindow.document.close();
         }
 
