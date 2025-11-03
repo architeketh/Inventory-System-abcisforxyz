@@ -16,7 +16,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
 
         .container {
@@ -31,17 +31,17 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 1.8em;
+            margin-bottom: 5px;
         }
 
         .header p {
-            font-size: 1.1em;
+            font-size: 0.9em;
             opacity: 0.9;
         }
 
@@ -49,19 +49,23 @@
             display: flex;
             background: #f5f5f5;
             border-bottom: 2px solid #ddd;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .nav-tab {
             flex: 1;
-            padding: 15px;
+            min-width: 100px;
+            padding: 12px 8px;
             text-align: center;
             cursor: pointer;
             background: #f5f5f5;
             border: none;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             color: #666;
             transition: all 0.3s;
+            white-space: nowrap;
         }
 
         .nav-tab:hover {
@@ -75,7 +79,7 @@
         }
 
         .content {
-            padding: 30px;
+            padding: 15px;
         }
 
         .tab-content {
@@ -87,21 +91,22 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-weight: 600;
             color: #333;
+            font-size: 14px;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
@@ -117,20 +122,44 @@
 
         .form-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .form-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .header p {
+                font-size: 1.1em;
+            }
+            
+            .content {
+                padding: 30px;
+            }
+            
+            .nav-tab {
+                padding: 15px;
+                font-size: 16px;
+            }
         }
 
         .btn {
-            padding: 12px 30px;
+            padding: 10px 20px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-right: 10px;
+            margin-right: 5px;
             margin-bottom: 10px;
+            display: inline-block;
         }
 
         .btn-primary {
@@ -189,18 +218,25 @@
         }
 
         .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
+            padding: 5px 10px;
+            font-size: 11px;
         }
 
         .inventory-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 15px;
             background: white;
             border-radius: 8px;
-            overflow: hidden;
+            overflow-x: auto;
+            display: block;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        @media (min-width: 768px) {
+            .inventory-table {
+                display: table;
+            }
         }
 
         .inventory-table thead {
@@ -210,8 +246,17 @@
 
         .inventory-table th,
         .inventory-table td {
-            padding: 15px;
+            padding: 8px;
             text-align: left;
+            font-size: 11px;
+        }
+
+        @media (min-width: 768px) {
+            .inventory-table th,
+            .inventory-table td {
+                padding: 10px;
+                font-size: 12px;
+            }
         }
 
         .inventory-table tbody tr {
@@ -225,45 +270,63 @@
 
         .action-buttons {
             display: flex;
-            gap: 5px;
+            gap: 3px;
             flex-wrap: wrap;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 480px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
         }
 
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 25px;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .stat-card h3 {
-            font-size: 2em;
-            margin-bottom: 10px;
+            font-size: 1.8em;
+            margin-bottom: 5px;
         }
 
         .stat-card p {
-            font-size: 1.1em;
+            font-size: 0.9em;
             opacity: 0.9;
         }
 
         .search-box {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .search-box input {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 2px solid #ddd;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .modal {
@@ -277,6 +340,7 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            padding: 10px;
         }
 
         .modal.active {
@@ -285,10 +349,10 @@
 
         .modal-content {
             background: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 15px;
             max-width: 500px;
-            width: 90%;
+            width: 100%;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -297,11 +361,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .modal-header h2 {
             color: #667eea;
+            font-size: 1.3em;
         }
 
         .close-btn {
@@ -314,7 +379,7 @@
 
         .barcode-display {
             text-align: center;
-            margin: 20px 0;
+            margin: 15px 0;
         }
 
         .barcode-display svg {
@@ -322,54 +387,82 @@
         }
 
         .report-section {
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .report-section h3 {
             color: #667eea;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #667eea;
+            font-size: 1.1em;
         }
 
         .category-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .category-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 900px) {
+            .category-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .category-list {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         .category-item {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 12px;
             border-radius: 8px;
             border-left: 4px solid #667eea;
         }
 
         .category-item h4 {
             color: #333;
-            margin-bottom: 10px;
-            font-size: 1.3em;
+            margin-bottom: 6px;
+            font-size: 1em;
         }
 
         .category-item p {
             color: #666;
-            font-size: 14px;
-            margin: 5px 0;
+            font-size: 11px;
+            margin: 3px 0;
         }
 
         .category-item .total-value {
             color: #28a745;
-            font-size: 1.2em;
+            font-size: 1em;
             font-weight: 700;
-            margin-top: 10px;
+            margin-top: 6px;
         }
 
         .export-import-section {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
-            margin-top: 20px;
+            margin-top: 15px;
+        }
+
+        .export-import-section h3 {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .export-import-section p {
+            font-size: 13px;
         }
 
         .file-input {
@@ -384,20 +477,28 @@
             
             .nav-tabs,
             .btn,
-            .action-buttons {
+            .action-buttons,
+            .search-box {
                 display: none;
             }
 
             .container {
                 box-shadow: none;
             }
+
+            .inventory-table th,
+            .inventory-table td {
+                font-size: 9px;
+                padding: 5px;
+            }
         }
 
         .alert {
-            padding: 15px;
-            margin-bottom: 20px;
+            padding: 12px;
+            margin-bottom: 15px;
             border-radius: 8px;
             display: none;
+            font-size: 14px;
         }
 
         .alert.show {
@@ -418,9 +519,59 @@
 
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+        }
+
+        /* Mobile table scroll indicator */
+        .table-wrapper {
+            position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-wrapper::after {
+            content: '→ Scroll';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        @media (max-width: 767px) {
+            .table-wrapper::after {
+                opacity: 1;
+            }
+        }
+
+        /* Compact report tables */
+        .report-section .inventory-table {
+            font-size: 10px;
+        }
+
+        .report-section .inventory-table th,
+        .report-section .inventory-table td {
+            padding: 6px 4px;
+        }
+
+        h2 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        @media (min-width: 768px) {
+            h2 {
+                font-size: 1.8em;
+            }
         }
     </style>
 </head>
@@ -436,7 +587,7 @@
             <button class="nav-tab" onclick="switchTab('inventory')">Inventory</button>
             <button class="nav-tab" onclick="switchTab('add-item')">Add Item</button>
             <button class="nav-tab" onclick="switchTab('reports')">Reports</button>
-            <button class="nav-tab" onclick="switchTab('data')">Data Management</button>
+            <button class="nav-tab" onclick="switchTab('data')">Data</button>
         </div>
 
         <div class="content">
@@ -444,7 +595,7 @@
 
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
-                <h2 style="margin-bottom: 20px;">Dashboard</h2>
+                <h2>Dashboard</h2>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3 id="total-items">0</h3>
@@ -464,66 +615,70 @@
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                         <h3 id="total-value">$0.00</h3>
-                        <p>Total Inventory Value</p>
+                        <p>Inventory Value</p>
                     </div>
                 </div>
 
-                <h3 style="margin-bottom: 15px;">Recent Inventory</h3>
+                <h3 style="margin-bottom: 10px; font-size: 1.1em;">Recent Inventory</h3>
                 <div class="search-box">
                     <input type="text" id="dashboard-search" placeholder="Search inventory..." onkeyup="filterDashboard()">
                 </div>
-                <table class="inventory-table" id="dashboard-table">
-                    <thead>
-                        <tr>
-                            <th>Barcode</th>
-                            <th>Category</th>
-                            <th>Description</th>
-                            <th>Brand</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Sold</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dashboard-tbody">
-                    </tbody>
-                </table>
+                <div class="table-wrapper">
+                    <table class="inventory-table" id="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Barcode</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Brand</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Sold</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-tbody">
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Inventory Tab -->
             <div id="inventory" class="tab-content">
-                <h2 style="margin-bottom: 20px;">Inventory Management</h2>
+                <h2>Inventory Management</h2>
                 
                 <div class="button-group">
                     <button class="btn btn-primary" onclick="printAllBarcodes()">
-                        🖨️ Print All Barcodes
+                        🖨️ Print Barcodes
                     </button>
                 </div>
 
                 <div class="search-box">
                     <input type="text" id="inventory-search" placeholder="Search inventory..." onkeyup="filterInventory()">
                 </div>
-                <table class="inventory-table">
-                    <thead>
-                        <tr>
-                            <th>Barcode</th>
-                            <th>Category</th>
-                            <th>Description</th>
-                            <th>Brand</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Sold</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-tbody">
-                    </tbody>
-                </table>
+                <div class="table-wrapper">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Barcode</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Brand</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Sold</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-tbody">
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Add Item Tab -->
             <div id="add-item" class="tab-content">
-                <h2 style="margin-bottom: 20px;">Add New Item</h2>
+                <h2>Add New Item</h2>
                 <form id="add-item-form" onsubmit="addItem(event)">
                     <div class="form-row">
                         <div class="form-group">
@@ -558,68 +713,72 @@
 
             <!-- Reports Tab -->
             <div id="reports" class="tab-content">
-                <h2 style="margin-bottom: 20px;">Inventory Reports</h2>
+                <h2>Inventory Reports</h2>
                 
-                <div style="margin-bottom: 20px;">
-                    <button class="btn btn-info" onclick="window.print()">Print Reports</button>
-                    <button class="btn btn-success" onclick="exportReportCSV()">Export to CSV</button>
+                <div class="button-group">
+                    <button class="btn btn-info" onclick="window.print()">Print</button>
+                    <button class="btn btn-success" onclick="exportReportCSV()">Export CSV</button>
                 </div>
 
                 <div class="report-section">
-                    <h3>Inventory by Category (with Total Values)</h3>
+                    <h3>By Category</h3>
                     <div id="category-report" class="category-list"></div>
                 </div>
 
                 <div class="report-section">
                     <h3>In Stock Items</h3>
-                    <table class="inventory-table">
-                        <thead>
-                            <tr>
-                                <th>Barcode</th>
-                                <th>Category</th>
-                                <th>Description</th>
-                                <th>Brand</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Total Value</th>
-                            </tr>
-                        </thead>
-                        <tbody id="instock-report-tbody"></tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Barcode</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Brand</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="instock-report-tbody"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="report-section">
                     <h3>Sold Items</h3>
-                    <table class="inventory-table">
-                        <thead>
-                            <tr>
-                                <th>Barcode</th>
-                                <th>Category</th>
-                                <th>Description</th>
-                                <th>Brand</th>
-                                <th>Price</th>
-                                <th>Quantity Sold</th>
-                                <th>Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sold-report-tbody"></tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Barcode</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Brand</th>
+                                    <th>Price</th>
+                                    <th>Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sold-report-tbody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Data Management Tab -->
             <div id="data" class="tab-content">
-                <h2 style="margin-bottom: 20px;">Data Management</h2>
+                <h2>Data Management</h2>
                 
                 <div class="export-import-section">
-                    <h3>Export Inventory Data</h3>
-                    <p style="margin: 10px 0; color: #666;">Download your inventory data as a JSON file to store on GitHub or backup locally.</p>
+                    <h3>💾 Export Data</h3>
+                    <p style="margin: 8px 0; color: #666;">Download inventory as JSON to save on GitHub or backup locally.</p>
                     <button class="btn btn-primary" onclick="exportData()">Export to JSON</button>
                 </div>
 
                 <div class="export-import-section">
-                    <h3>Import Inventory Data</h3>
-                    <p style="margin: 10px 0; color: #666;">Import inventory data from a JSON file stored on GitHub or your local system.</p>
+                    <h3>📂 Import Data</h3>
+                    <p style="margin: 8px 0; color: #666;">Import inventory from JSON file stored on GitHub or local device.</p>
                     <div class="file-input">
                         <input type="file" id="import-file" accept=".json">
                     </div>
@@ -627,9 +786,13 @@
                 </div>
 
                 <div class="export-import-section">
-                    <h3>Clear All Data</h3>
-                    <p style="margin: 10px 0; color: #666;">Warning: This will permanently delete all inventory data from local storage.</p>
-                    <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
+                    <h3>ℹ️ Data Storage Info</h3>
+                    <p style="margin: 8px 0; color: #666; font-size: 12px;">
+                        • Data is stored locally on your device<br>
+                        • Export regularly to save backups on GitHub<br>
+                        • Works on both mobile and desktop<br>
+                        • Import data to sync across devices
+                    </p>
                 </div>
             </div>
         </div>
@@ -685,7 +848,7 @@
                     <label>Item: <strong id="sell-item-name"></strong></label>
                 </div>
                 <div class="form-group">
-                    <label>Available Quantity: <strong id="sell-available"></strong></label>
+                    <label>Available: <strong id="sell-available"></strong></label>
                 </div>
                 <div class="form-group">
                     <label for="sell-quantity">Quantity to Sell *</label>
@@ -701,7 +864,7 @@
     <div id="barcode-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Item Barcode</h2>
+                <h2>Barcode</h2>
                 <button class="close-btn" onclick="closeBarcodeModal()">&times;</button>
             </div>
             <div class="barcode-display">
@@ -709,7 +872,7 @@
                 <svg id="barcode"></svg>
                 <p style="margin-top: 10px; color: #667eea; font-weight: 600;">abc_isfor_xyz</p>
             </div>
-            <button class="btn btn-primary" onclick="printBarcode()">Print Barcode</button>
+            <button class="btn btn-primary" onclick="printBarcode()">Print</button>
             <button class="btn btn-secondary" onclick="closeBarcodeModal()">Close</button>
         </div>
     </div>
@@ -769,7 +932,7 @@
             saveInventory();
             
             document.getElementById('add-item-form').reset();
-            showAlert('Item added successfully! Barcode: ' + generateBarcode(item.id), 'success');
+            showAlert('Item added! Barcode: ' + generateBarcode(item.id), 'success');
             updateDashboard();
             renderInventory();
             updateDropdownLists();
@@ -780,7 +943,7 @@
             const item = inventory.find(i => i.id === id);
             if (!item) return;
 
-            if (confirm('Duplicate "' + item.description + '"?\n\nA new item will be created with a new barcode.')) {
+            if (confirm('Duplicate "' + item.description + '"?')) {
                 const newItem = {
                     id: nextId++,
                     category: item.category,
@@ -794,7 +957,7 @@
 
                 inventory.push(newItem);
                 saveInventory();
-                showAlert('Item duplicated! New barcode: ' + generateBarcode(newItem.id), 'success');
+                showAlert('Duplicated! Barcode: ' + generateBarcode(newItem.id), 'success');
                 updateDashboard();
                 renderInventory();
                 updateDropdownLists();
@@ -829,7 +992,7 @@
             const tbody = document.getElementById('dashboard-tbody');
             tbody.innerHTML = '';
 
-            inventory.slice().reverse().slice(0, 10).forEach(item => {
+            inventory.slice().reverse().slice(0, 15).forEach(item => {
                 const row = createInventoryRow(item, false);
                 tbody.appendChild(row);
             });
@@ -853,7 +1016,7 @@
             
             const status = item.quantity > 0 ? 
                 '<span style="color: green; font-weight: 600;">In Stock</span>' : 
-                '<span style="color: red; font-weight: 600;">Out of Stock</span>';
+                '<span style="color: red; font-weight: 600;">Out</span>';
 
             const td1 = document.createElement('td');
             td1.innerHTML = '<strong>' + barcode + '</strong>';
@@ -865,6 +1028,10 @@
 
             const td3 = document.createElement('td');
             td3.textContent = item.description;
+            td3.style.maxWidth = '200px';
+            td3.style.overflow = 'hidden';
+            td3.style.textOverflow = 'ellipsis';
+            td3.style.whiteSpace = 'nowrap';
             row.appendChild(td3);
 
             const td4 = document.createElement('td');
@@ -890,7 +1057,7 @@
 
                 const barcodeBtn = document.createElement('button');
                 barcodeBtn.className = 'btn btn-info btn-sm';
-                barcodeBtn.textContent = 'Barcode';
+                barcodeBtn.textContent = 'Bar';
                 barcodeBtn.onclick = function() { showBarcode(item.id); };
                 actionsDiv.appendChild(barcodeBtn);
 
@@ -902,7 +1069,7 @@
 
                 const duplicateBtn = document.createElement('button');
                 duplicateBtn.className = 'btn btn-primary btn-sm';
-                duplicateBtn.textContent = 'Duplicate';
+                duplicateBtn.textContent = 'Dup';
                 duplicateBtn.onclick = function() { duplicateItem(item.id); };
                 actionsDiv.appendChild(duplicateBtn);
 
@@ -915,7 +1082,7 @@
 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn btn-danger btn-sm';
-                deleteBtn.textContent = 'Delete';
+                deleteBtn.textContent = 'Del';
                 deleteBtn.onclick = function() { deleteItem(item.id); };
                 actionsDiv.appendChild(deleteBtn);
 
@@ -968,7 +1135,7 @@
         // Print all barcodes
         function printAllBarcodes() {
             if (inventory.length === 0) {
-                showAlert('No items to print barcodes for!', 'error');
+                showAlert('No items to print!', 'error');
                 return;
             }
 
@@ -1056,7 +1223,7 @@
                 item.quantity = parseInt(document.getElementById('edit-quantity').value);
 
                 saveInventory();
-                showAlert('Item updated successfully!', 'success');
+                showAlert('Item updated!', 'success');
                 updateDashboard();
                 renderInventory();
                 renderReports();
@@ -1106,10 +1273,10 @@
 
         // Delete item
         function deleteItem(id) {
-            if (confirm('Are you sure you want to delete this item?')) {
+            if (confirm('Delete this item?')) {
                 inventory = inventory.filter(item => item.id !== id);
                 saveInventory();
-                showAlert('Item deleted successfully!', 'success');
+                showAlert('Item deleted!', 'success');
                 updateDashboard();
                 renderInventory();
                 renderReports();
@@ -1186,7 +1353,7 @@
                     '<p>Items: ' + data.count + '</p>' +
                     '<p>In Stock: ' + data.inStock + '</p>' +
                     '<p>Sold: ' + data.sold + '</p>' +
-                    '<p class="total-value">Total Value: $' + data.totalValue.toFixed(2) + '</p>';
+                    '<p class="total-value">$' + data.totalValue.toFixed(2) + '</p>';
                 container.appendChild(div);
             });
         }
@@ -1195,15 +1362,17 @@
             const tbody = document.getElementById('instock-report-tbody');
             tbody.innerHTML = '';
 
-            inventory.filter(function(item) {
+            const inStockItems = inventory.filter(function(item) {
                 return item.quantity > 0;
-            }).forEach(function(item) {
+            });
+
+            inStockItems.forEach(function(item) {
                 const totalValue = item.quantity * item.price;
                 const barcode = generateBarcode(item.id);
                 const row = document.createElement('tr');
                 row.innerHTML = '<td><strong>' + barcode + '</strong></td>' +
                     '<td>' + item.category + '</td>' +
-                    '<td>' + item.description + '</td>' +
+                    '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + item.description + '</td>' +
                     '<td>' + item.brand + '</td>' +
                     '<td>$' + item.price.toFixed(2) + '</td>' +
                     '<td>' + item.quantity + '</td>' +
@@ -1216,15 +1385,17 @@
             const tbody = document.getElementById('sold-report-tbody');
             tbody.innerHTML = '';
 
-            inventory.filter(function(item) {
+            const soldItems = inventory.filter(function(item) {
                 return item.sold > 0;
-            }).forEach(function(item) {
+            });
+
+            soldItems.forEach(function(item) {
                 const revenue = item.sold * item.price;
                 const barcode = generateBarcode(item.id);
                 const row = document.createElement('tr');
                 row.innerHTML = '<td><strong>' + barcode + '</strong></td>' +
                     '<td>' + item.category + '</td>' +
-                    '<td>' + item.description + '</td>' +
+                    '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + item.description + '</td>' +
                     '<td>' + item.brand + '</td>' +
                     '<td>$' + item.price.toFixed(2) + '</td>' +
                     '<td>' + item.sold + '</td>' +
@@ -1264,7 +1435,7 @@
             link.download = 'abc_isfor_xyz_inventory_' + new Date().toISOString().split('T')[0] + '.json';
             link.click();
             URL.revokeObjectURL(url);
-            showAlert('Inventory data exported successfully!', 'success');
+            showAlert('Data exported successfully!', 'success');
         }
 
         // Import data
@@ -1286,7 +1457,7 @@
                         throw new Error('Invalid data format');
                     }
 
-                    if (confirm('This will replace all existing inventory data. Continue?')) {
+                    if (confirm('This will replace all existing data. Continue?')) {
                         inventory = importedData;
                         nextId = Math.max.apply(Math, inventory.map(function(i) { return i.id; }).concat([0])) + 1;
                         saveInventory();
@@ -1294,29 +1465,13 @@
                         renderInventory();
                         renderReports();
                         updateDropdownLists();
-                        showAlert('Inventory data imported successfully!', 'success');
+                        showAlert('Data imported successfully!', 'success');
                     }
                 } catch (error) {
-                    showAlert('Error importing data: Invalid JSON format', 'error');
+                    showAlert('Error: Invalid JSON format', 'error');
                 }
             };
             reader.readAsText(file);
-        }
-
-        // Clear all data
-        function clearAllData() {
-            if (confirm('Are you sure you want to delete ALL inventory data? This cannot be undone!')) {
-                if (confirm('This is your final warning. All data will be permanently deleted!')) {
-                    inventory = [];
-                    nextId = 1;
-                    saveInventory();
-                    updateDashboard();
-                    renderInventory();
-                    renderReports();
-                    updateDropdownLists();
-                    showAlert('All data has been cleared.', 'success');
-                }
-            }
         }
 
         // Export reports to CSV
@@ -1338,7 +1493,7 @@
             link.download = 'abc_isfor_xyz_report_' + new Date().toISOString().split('T')[0] + '.csv';
             link.click();
             URL.revokeObjectURL(url);
-            showAlert('Report exported to CSV successfully!', 'success');
+            showAlert('Report exported to CSV!', 'success');
         }
 
         // Show alert
