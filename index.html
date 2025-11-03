@@ -376,31 +376,6 @@
             margin: 10px 0;
         }
 
-        .barcode-print-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .barcode-print-item {
-            border: 2px dashed #ddd;
-            padding: 15px;
-            text-align: center;
-            page-break-inside: avoid;
-        }
-
-        .barcode-print-item p {
-            margin: 5px 0;
-            font-size: 12px;
-        }
-
-        .barcode-print-item .item-name {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-
         @media print {
             body {
                 background: white;
@@ -415,14 +390,6 @@
 
             .container {
                 box-shadow: none;
-            }
-
-            .barcode-print-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            @page {
-                margin: 0.5in;
             }
         }
 
@@ -485,11 +452,11 @@
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <h3 id="in-stock-items">0</h3>
-                        <p>In Stock</p>
+                        <p>Units In Stock</p>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                         <h3 id="sold-items">0</h3>
-                        <p>Items Sold</p>
+                        <p>Units Sold</p>
                     </div>
                     <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                         <h3 id="total-categories">0</h3>
@@ -566,7 +533,8 @@
                         </div>
                         <div class="form-group">
                             <label for="brand">Brand *</label>
-                            <input type="text" id="brand" required>
+                            <input type="text" id="brand" required list="brand-list">
+                            <datalist id="brand-list"></datalist>
                         </div>
                     </div>
                     <div class="form-group">
@@ -687,7 +655,8 @@
                 </div>
                 <div class="form-group">
                     <label for="edit-brand">Brand *</label>
-                    <input type="text" id="edit-brand" required>
+                    <input type="text" id="edit-brand" required list="edit-brand-list">
+                    <datalist id="edit-brand-list"></datalist>
                 </div>
                 <div class="form-group">
                     <label for="edit-price">Price ($) *</label>
@@ -760,7 +729,7 @@
             updateDashboard();
             renderInventory();
             renderReports();
-            updateCategoryList();
+            updateDropdownLists();
         });
 
         // Tab switching
@@ -803,7 +772,7 @@
             showAlert('Item added successfully! Barcode: ' + generateBarcode(item.id), 'success');
             updateDashboard();
             renderInventory();
-            updateCategoryList();
+            updateDropdownLists();
         }
 
         // Duplicate item
@@ -811,7 +780,7 @@
             const item = inventory.find(i => i.id === id);
             if (!item) return;
 
-            if (confirm(`Duplicate "${item.description}"?\n\nA new item will be created with a new barcode.`)) {
+            if (confirm('Duplicate "' + item.description + '"?\n\nA new item will be created with a new barcode.')) {
                 const newItem = {
                     id: nextId++,
                     category: item.category,
@@ -828,7 +797,7 @@
                 showAlert('Item duplicated! New barcode: ' + generateBarcode(newItem.id), 'success');
                 updateDashboard();
                 renderInventory();
-                updateCategoryList();
+                updateDropdownLists();
             }
         }
 
@@ -841,13 +810,13 @@
         // Update dashboard
         function updateDashboard() {
             const totalItems = inventory.length;
-            const inStock = inventory.filter(item => item.quantity > 0).length;
+            const inStockUnits = inventory.reduce((sum, item) => sum + item.quantity, 0);
             const totalSold = inventory.reduce((sum, item) => sum + item.sold, 0);
             const categories = [...new Set(inventory.map(item => item.category))].length;
             const totalValue = inventory.reduce((sum, item) => sum + (item.quantity * item.price), 0);
 
             document.getElementById('total-items').textContent = totalItems;
-            document.getElementById('in-stock-items').textContent = inStock;
+            document.getElementById('in-stock-items').textContent = inStockUnits;
             document.getElementById('sold-items').textContent = totalSold;
             document.getElementById('total-categories').textContent = categories;
             document.getElementById('total-value').textContent = '$' + totalValue.toFixed(2);
@@ -886,26 +855,75 @@
                 '<span style="color: green; font-weight: 600;">In Stock</span>' : 
                 '<span style="color: red; font-weight: 600;">Out of Stock</span>';
 
-            row.innerHTML = `
-                <td><strong>${barcode}</strong></td>
-                <td>${item.category}</td>
-                <td>${item.description}</td>
-                <td>${item.brand}</td>
-                <td>$${item.price.toFixed(2)}</td>
-                <td>${item.quantity}</td>
-                <td>${item.sold}</td>
-                ${includeActions ? `
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn btn-info btn-sm" onclick="showBarcode(${item.id})">Barcode</button>
-                            <button class="btn btn-warning btn-sm" onclick="openEditModal(${item.id})">Edit</button>
-                            <button class="btn btn-primary btn-sm" onclick="duplicateItem(${item.id})">Duplicate</button>
-                            <button class="btn btn-success btn-sm" onclick="openSellModal(${item.id})" ${item.quantity === 0 ? 'disabled' : ''}>Sell</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Delete</button>
-                        </div>
-                    </td>
-                ` : `<td>${status}</td>`}
-            `;
+            const td1 = document.createElement('td');
+            td1.innerHTML = '<strong>' + barcode + '</strong>';
+            row.appendChild(td1);
+
+            const td2 = document.createElement('td');
+            td2.textContent = item.category;
+            row.appendChild(td2);
+
+            const td3 = document.createElement('td');
+            td3.textContent = item.description;
+            row.appendChild(td3);
+
+            const td4 = document.createElement('td');
+            td4.textContent = item.brand;
+            row.appendChild(td4);
+
+            const td5 = document.createElement('td');
+            td5.textContent = '$' + item.price.toFixed(2);
+            row.appendChild(td5);
+
+            const td6 = document.createElement('td');
+            td6.textContent = item.quantity;
+            row.appendChild(td6);
+
+            const td7 = document.createElement('td');
+            td7.textContent = item.sold;
+            row.appendChild(td7);
+
+            const td8 = document.createElement('td');
+            if (includeActions) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'action-buttons';
+
+                const barcodeBtn = document.createElement('button');
+                barcodeBtn.className = 'btn btn-info btn-sm';
+                barcodeBtn.textContent = 'Barcode';
+                barcodeBtn.onclick = function() { showBarcode(item.id); };
+                actionsDiv.appendChild(barcodeBtn);
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-warning btn-sm';
+                editBtn.textContent = 'Edit';
+                editBtn.onclick = function() { openEditModal(item.id); };
+                actionsDiv.appendChild(editBtn);
+
+                const duplicateBtn = document.createElement('button');
+                duplicateBtn.className = 'btn btn-primary btn-sm';
+                duplicateBtn.textContent = 'Duplicate';
+                duplicateBtn.onclick = function() { duplicateItem(item.id); };
+                actionsDiv.appendChild(duplicateBtn);
+
+                const sellBtn = document.createElement('button');
+                sellBtn.className = 'btn btn-success btn-sm';
+                sellBtn.textContent = 'Sell';
+                sellBtn.disabled = item.quantity === 0;
+                sellBtn.onclick = function() { openSellModal(item.id); };
+                actionsDiv.appendChild(sellBtn);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger btn-sm';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = function() { deleteItem(item.id); };
+                actionsDiv.appendChild(deleteBtn);
+
+                td8.appendChild(actionsDiv);
+            } else {
+                td8.innerHTML = status;
+            }
+            row.appendChild(td8);
             
             return row;
         }
@@ -918,7 +936,7 @@
             const barcode = generateBarcode(item.id);
 
             document.getElementById('barcode-item-info').textContent = 
-                `${item.description} - ${item.brand}`;
+                item.description + ' - ' + item.brand;
 
             JsBarcode("#barcode", barcode, {
                 format: "CODE128",
@@ -938,20 +956,11 @@
         function printBarcode() {
             const barcodeContent = document.querySelector('#barcode-modal .barcode-display').innerHTML;
             const printWindow = window.open('', '', 'width=600,height=400');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Print Barcode</title>
-                    <style>
-                        body { text-align: center; padding: 20px; font-family: Arial, sans-serif; }
-                        svg { max-width: 100%; }
-                    </style>
-                </head>
-                <body>
-                    ${barcodeContent}
-                </body>
-                </html>
-            `);
+            printWindow.document.write('<html><head><title>Print Barcode</title>');
+            printWindow.document.write('<style>body { text-align: center; padding: 20px; font-family: Arial, sans-serif; } svg { max-width: 100%; }</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(barcodeContent);
+            printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.print();
         }
@@ -966,7 +975,7 @@
             const printWindow = window.open('', '', 'width=900,height=600');
             
             printWindow.document.write('<html><head><title>Print All Barcodes - abc_isfor_xyz</title>');
-            printWindow.document.write('<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><' + '/script>');
+            printWindow.document.write('<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></scr' + 'ipt>');
             printWindow.document.write('<style>');
             printWindow.document.write('body { font-family: Arial, sans-serif; padding: 20px; }');
             printWindow.document.write('h1 { text-align: center; color: #667eea; margin-bottom: 30px; }');
@@ -981,7 +990,7 @@
             printWindow.document.write('<h1>abc_isfor_xyz - All Inventory Barcodes</h1>');
             printWindow.document.write('<div class="barcode-grid">');
 
-            inventory.forEach((item, index) => {
+            inventory.forEach(function(item, index) {
                 const barcode = generateBarcode(item.id);
                 printWindow.document.write('<div class="barcode-item">');
                 printWindow.document.write('<div class="item-name">' + item.description + '</div>');
@@ -995,9 +1004,9 @@
             });
 
             printWindow.document.write('</div>');
-            printWindow.document.write('<script>');
+            printWindow.document.write('<scr' + 'ipt>');
 
-            inventory.forEach((item, index) => {
+            inventory.forEach(function(item, index) {
                 const barcode = generateBarcode(item.id);
                 printWindow.document.write('JsBarcode("#barcode-' + index + '", "' + barcode + '", {');
                 printWindow.document.write('format: "CODE128",');
@@ -1009,7 +1018,7 @@
             });
 
             printWindow.document.write('setTimeout(function() { window.print(); }, 500);');
-            printWindow.document.write('<' + '/script></body></html>');
+            printWindow.document.write('</scr' + 'ipt></body></html>');
             printWindow.document.close();
         }
 
@@ -1025,7 +1034,7 @@
             document.getElementById('edit-price').value = item.price;
             document.getElementById('edit-quantity').value = item.quantity;
 
-            updateCategoryList();
+            updateDropdownLists();
             document.getElementById('edit-modal').classList.add('active');
         }
 
@@ -1061,7 +1070,7 @@
             if (!item || item.quantity === 0) return;
 
             document.getElementById('sell-id').value = item.id;
-            document.getElementById('sell-item-name').textContent = `${item.description} - ${item.brand}`;
+            document.getElementById('sell-item-name').textContent = item.description + ' - ' + item.brand;
             document.getElementById('sell-available').textContent = item.quantity;
             document.getElementById('sell-quantity').max = item.quantity;
             document.getElementById('sell-quantity').value = 1;
@@ -1085,7 +1094,7 @@
                 item.sold += quantity;
 
                 saveInventory();
-                showAlert(`Sale recorded! ${quantity} unit(s) sold.`, 'success');
+                showAlert('Sale recorded! ' + quantity + ' unit(s) sold.', 'success');
                 updateDashboard();
                 renderInventory();
                 renderReports();
@@ -1104,21 +1113,34 @@
                 updateDashboard();
                 renderInventory();
                 renderReports();
-                updateCategoryList();
+                updateDropdownLists();
             }
         }
 
-        // Update category list
-        function updateCategoryList() {
+        // Update dropdown lists for categories and brands
+        function updateDropdownLists() {
             const categories = [...new Set(inventory.map(item => item.category))];
-            const datalists = ['category-list', 'edit-category-list'];
+            const brands = [...new Set(inventory.map(item => item.brand))];
             
-            datalists.forEach(listId => {
+            const categoryLists = ['category-list', 'edit-category-list'];
+            const brandLists = ['brand-list', 'edit-brand-list'];
+            
+            categoryLists.forEach(function(listId) {
                 const datalist = document.getElementById(listId);
                 datalist.innerHTML = '';
-                categories.forEach(cat => {
+                categories.forEach(function(cat) {
                     const option = document.createElement('option');
                     option.value = cat;
+                    datalist.appendChild(option);
+                });
+            });
+
+            brandLists.forEach(function(listId) {
+                const datalist = document.getElementById(listId);
+                datalist.innerHTML = '';
+                brands.forEach(function(brand) {
+                    const option = document.createElement('option');
+                    option.value = brand;
                     datalist.appendChild(option);
                 });
             });
@@ -1133,7 +1155,7 @@
 
         function renderCategoryReport() {
             const categoryMap = {};
-            inventory.forEach(item => {
+            inventory.forEach(function(item) {
                 if (!categoryMap[item.category]) {
                     categoryMap[item.category] = { 
                         count: 0, 
@@ -1151,19 +1173,20 @@
             const container = document.getElementById('category-report');
             container.innerHTML = '';
 
-            // Sort categories by total value (highest first)
-            const sortedCategories = Object.entries(categoryMap).sort((a, b) => b[1].totalValue - a[1].totalValue);
+            const sortedCategories = Object.entries(categoryMap).sort(function(a, b) {
+                return b[1].totalValue - a[1].totalValue;
+            });
 
-            sortedCategories.forEach(([category, data]) => {
+            sortedCategories.forEach(function(entry) {
+                const category = entry[0];
+                const data = entry[1];
                 const div = document.createElement('div');
                 div.className = 'category-item';
-                div.innerHTML = `
-                    <h4>${category}</h4>
-                    <p>Items: ${data.count}</p>
-                    <p>In Stock: ${data.inStock}</p>
-                    <p>Sold: ${data.sold}</p>
-                    <p class="total-value">Total Value: $${data.totalValue.toFixed(2)}</p>
-                `;
+                div.innerHTML = '<h4>' + category + '</h4>' +
+                    '<p>Items: ' + data.count + '</p>' +
+                    '<p>In Stock: ' + data.inStock + '</p>' +
+                    '<p>Sold: ' + data.sold + '</p>' +
+                    '<p class="total-value">Total Value: $' + data.totalValue.toFixed(2) + '</p>';
                 container.appendChild(div);
             });
         }
@@ -1172,19 +1195,19 @@
             const tbody = document.getElementById('instock-report-tbody');
             tbody.innerHTML = '';
 
-            inventory.filter(item => item.quantity > 0).forEach(item => {
+            inventory.filter(function(item) {
+                return item.quantity > 0;
+            }).forEach(function(item) {
                 const totalValue = item.quantity * item.price;
                 const barcode = generateBarcode(item.id);
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${barcode}</strong></td>
-                    <td>${item.category}</td>
-                    <td>${item.description}</td>
-                    <td>${item.brand}</td>
-                    <td>$${item.price.toFixed(2)}</td>
-                    <td>${item.quantity}</td>
-                    <td style="color: #28a745; font-weight: 600;">$${totalValue.toFixed(2)}</td>
-                `;
+                row.innerHTML = '<td><strong>' + barcode + '</strong></td>' +
+                    '<td>' + item.category + '</td>' +
+                    '<td>' + item.description + '</td>' +
+                    '<td>' + item.brand + '</td>' +
+                    '<td>$' + item.price.toFixed(2) + '</td>' +
+                    '<td>' + item.quantity + '</td>' +
+                    '<td style="color: #28a745; font-weight: 600;">$' + totalValue.toFixed(2) + '</td>';
                 tbody.appendChild(row);
             });
         }
@@ -1193,19 +1216,19 @@
             const tbody = document.getElementById('sold-report-tbody');
             tbody.innerHTML = '';
 
-            inventory.filter(item => item.sold > 0).forEach(item => {
+            inventory.filter(function(item) {
+                return item.sold > 0;
+            }).forEach(function(item) {
                 const revenue = item.sold * item.price;
                 const barcode = generateBarcode(item.id);
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${barcode}</strong></td>
-                    <td>${item.category}</td>
-                    <td>${item.description}</td>
-                    <td>${item.brand}</td>
-                    <td>$${item.price.toFixed(2)}</td>
-                    <td>${item.sold}</td>
-                    <td style="color: #28a745; font-weight: 600;">$${revenue.toFixed(2)}</td>
-                `;
+                row.innerHTML = '<td><strong>' + barcode + '</strong></td>' +
+                    '<td>' + item.category + '</td>' +
+                    '<td>' + item.description + '</td>' +
+                    '<td>' + item.brand + '</td>' +
+                    '<td>$' + item.price.toFixed(2) + '</td>' +
+                    '<td>' + item.sold + '</td>' +
+                    '<td style="color: #28a745; font-weight: 600;">$' + revenue.toFixed(2) + '</td>';
                 tbody.appendChild(row);
             });
         }
@@ -1215,7 +1238,7 @@
             const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
             const rows = document.getElementById('dashboard-tbody').getElementsByTagName('tr');
             
-            Array.from(rows).forEach(row => {
+            Array.from(rows).forEach(function(row) {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
@@ -1225,7 +1248,7 @@
             const searchTerm = document.getElementById('inventory-search').value.toLowerCase();
             const rows = document.getElementById('inventory-tbody').getElementsByTagName('tr');
             
-            Array.from(rows).forEach(row => {
+            Array.from(rows).forEach(function(row) {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             });
@@ -1238,7 +1261,7 @@
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `abc_isfor_xyz_inventory_${new Date().toISOString().split('T')[0]}.json`;
+            link.download = 'abc_isfor_xyz_inventory_' + new Date().toISOString().split('T')[0] + '.json';
             link.click();
             URL.revokeObjectURL(url);
             showAlert('Inventory data exported successfully!', 'success');
@@ -1265,12 +1288,12 @@
 
                     if (confirm('This will replace all existing inventory data. Continue?')) {
                         inventory = importedData;
-                        nextId = Math.max(...inventory.map(i => i.id), 0) + 1;
+                        nextId = Math.max.apply(Math, inventory.map(function(i) { return i.id; }).concat([0])) + 1;
                         saveInventory();
                         updateDashboard();
                         renderInventory();
                         renderReports();
-                        updateCategoryList();
+                        updateDropdownLists();
                         showAlert('Inventory data imported successfully!', 'success');
                     }
                 } catch (error) {
@@ -1290,7 +1313,7 @@
                     updateDashboard();
                     renderInventory();
                     renderReports();
-                    updateCategoryList();
+                    updateDropdownLists();
                     showAlert('All data has been cleared.', 'success');
                 }
             }
@@ -1300,18 +1323,19 @@
         function exportReportCSV() {
             let csv = 'Barcode,Category,Description,Brand,Price,Quantity,Sold,Inventory Value,Revenue\n';
             
-            inventory.forEach(item => {
+            inventory.forEach(function(item) {
                 const barcode = generateBarcode(item.id);
                 const inventoryValue = (item.quantity * item.price).toFixed(2);
                 const revenue = (item.sold * item.price).toFixed(2);
-                csv += `${barcode},"${item.category}","${item.description}","${item.brand}",${item.price},${item.quantity},${item.sold},${inventoryValue},${revenue}\n`;
+                csv += barcode + ',"' + item.category + '","' + item.description + '","' + item.brand + '",' + 
+                       item.price + ',' + item.quantity + ',' + item.sold + ',' + inventoryValue + ',' + revenue + '\n';
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `abc_isfor_xyz_report_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = 'abc_isfor_xyz_report_' + new Date().toISOString().split('T')[0] + '.csv';
             link.click();
             URL.revokeObjectURL(url);
             showAlert('Report exported to CSV successfully!', 'success');
@@ -1321,9 +1345,9 @@
         function showAlert(message, type) {
             const alert = document.getElementById('alert');
             alert.textContent = message;
-            alert.className = `alert alert-${type} show`;
+            alert.className = 'alert alert-' + type + ' show';
             
-            setTimeout(() => {
+            setTimeout(function() {
                 alert.classList.remove('show');
             }, 3000);
         }
