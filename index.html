@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>abc_isfor_xyz - Inventory Management System</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -596,6 +597,18 @@
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
                 <h2>Dashboard</h2>
+                
+                <div id="empty-state" style="display: none; background: #fff3cd; border: 2px dashed #ffc107; border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 20px;">
+                    <h3 style="color: #856404; margin-bottom: 15px;">👋 Welcome to abc_isfor_xyz!</h3>
+                    <p style="color: #856404; margin-bottom: 15px;">No inventory data on this device yet.</p>
+                    <div style="text-align: left; max-width: 400px; margin: 0 auto; background: white; padding: 15px; border-radius: 8px;">
+                        <p style="font-weight: 600; margin-bottom: 10px;">Get started:</p>
+                        <p style="font-size: 13px; margin: 8px 0;">📱 <strong>New user?</strong> Click "Add Item" tab to add your first product</p>
+                        <p style="font-size: 13px; margin: 8px 0;">💻 <strong>Have data on another device?</strong> Go to "Data" tab → Import your JSON file</p>
+                        <p style="font-size: 13px; margin: 8px 0;">📂 <strong>Need sample data?</strong> Import the sample file from GitHub</p>
+                    </div>
+                </div>
+                
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3 id="total-items">0</h3>
@@ -770,10 +783,69 @@
             <div id="data" class="tab-content">
                 <h2>Data Management</h2>
                 
+                <div class="export-import-section" style="background: #e7f3ff; border-left: 4px solid #2196F3;">
+                    <h3>🔄 Sync Between Devices</h3>
+                    <p style="margin: 8px 0; color: #333; font-size: 13px; font-weight: 600;">
+                        Each device has its own data. To see the same inventory on mobile and desktop:
+                    </p>
+                    <ol style="margin: 10px 0; padding-left: 20px; color: #666; font-size: 12px;">
+                        <li><strong>Desktop:</strong> Export to JSON → Upload file to GitHub</li>
+                        <li><strong>Mobile:</strong> Download file from GitHub → Import JSON</li>
+                        <li>Now both devices have the same data! 🎉</li>
+                    </ol>
+                    <p style="margin: 8px 0; color: #d32f2f; font-size: 12px;">
+                        ⚠️ <strong>Important:</strong> Changes on one device won't automatically appear on the other. Export and import to sync.
+                    </p>
+                </div>
+
+                <div class="export-import-section" style="background: #e8f5e9; border-left: 4px solid #4CAF50;">
+                    <h3>⚡ Quick Share (Instant Sync)</h3>
+                    <p style="margin: 8px 0; color: #333; font-size: 13px;">
+                        <strong>Fastest way to load data on mobile!</strong> Generate a shareable link or QR code.
+                    </p>
+                    <button class="btn btn-success" onclick="generateShareLink()" style="margin-top: 10px;">
+                        📱 Generate Share Link
+                    </button>
+                    
+                    <div id="share-link-container" style="display: none; margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border: 2px solid #4CAF50;">
+                        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                            <strong>Share Link Generated!</strong> Use any of these methods:
+                        </p>
+                        
+                        <div style="margin: 10px 0;">
+                            <label style="font-size: 12px; font-weight: 600; color: #333;">Method 1: Click Link on Mobile</label>
+                            <div style="display: flex; gap: 8px; margin-top: 5px;">
+                                <input type="text" id="share-link-url" readonly style="flex: 1; padding: 8px; font-size: 11px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5;">
+                                <button class="btn btn-sm btn-primary" onclick="copyShareLink()">Copy</button>
+                            </div>
+                            <p style="font-size: 11px; color: #666; margin-top: 5px;">
+                                📧 Send this link via email, text, or messaging app to your mobile
+                            </p>
+                        </div>
+
+                        <div style="margin: 15px 0; padding-top: 15px; border-top: 1px solid #ddd;">
+                            <label style="font-size: 12px; font-weight: 600; color: #333;">Method 2: Scan QR Code</label>
+                            <div style="text-align: center; margin-top: 10px; padding: 15px; background: white;">
+                                <div id="qr-code-display"></div>
+                            </div>
+                            <p style="font-size: 11px; color: #666; margin-top: 5px; text-align: center;">
+                                📷 Open camera app on mobile and scan this QR code
+                            </p>
+                        </div>
+
+                        <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 6px;">
+                            <p style="font-size: 11px; color: #856404; margin: 0;">
+                                ⏱️ <strong>Note:</strong> This link contains all your inventory data and works for 7 days. Click the link on any device to instantly load the data!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="export-import-section">
                     <h3>💾 Export Data</h3>
                     <p style="margin: 8px 0; color: #666;">Download inventory as JSON to save on GitHub or backup locally.</p>
                     <button class="btn btn-primary" onclick="exportData()">Export to JSON</button>
+                    <p id="export-status" style="margin-top: 8px; font-size: 12px; color: #666;"></p>
                 </div>
 
                 <div class="export-import-section">
@@ -786,12 +858,11 @@
                 </div>
 
                 <div class="export-import-section">
-                    <h3>ℹ️ Data Storage Info</h3>
+                    <h3>ℹ️ Current Device Info</h3>
                     <p style="margin: 8px 0; color: #666; font-size: 12px;">
-                        • Data is stored locally on your device<br>
-                        • Export regularly to save backups on GitHub<br>
-                        • Works on both mobile and desktop<br>
-                        • Import data to sync across devices
+                        <strong>Items on this device:</strong> <span id="device-item-count">0</span><br>
+                        <strong>Last update:</strong> <span id="last-update-time">Never</span><br>
+                        <strong>Device storage:</strong> Browser localStorage
                     </p>
                 </div>
             </div>
@@ -889,6 +960,7 @@
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
+            checkForSharedData(); // Check for shared data first
             updateDashboard();
             renderInventory();
             renderReports();
@@ -910,6 +982,8 @@
                 renderReports();
             } else if (tabName === 'dashboard') {
                 updateDashboard();
+            } else if (tabName === 'data') {
+                updateDeviceInfo();
             }
         }
 
@@ -968,6 +1042,7 @@
         function saveInventory() {
             localStorage.setItem('abc_inventory', JSON.stringify(inventory));
             localStorage.setItem('abc_next_id', nextId.toString());
+            localStorage.setItem('abc_last_update', new Date().toISOString());
         }
 
         // Update dashboard
@@ -984,7 +1059,38 @@
             document.getElementById('total-categories').textContent = categories;
             document.getElementById('total-value').textContent = '$' + totalValue.toFixed(2);
 
+            // Show/hide empty state
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) {
+                emptyState.style.display = totalItems === 0 ? 'block' : 'none';
+            }
+
+            // Update device info
+            updateDeviceInfo();
+
             renderDashboardTable();
+        }
+
+        // Update device info
+        function updateDeviceInfo() {
+            const itemCountEl = document.getElementById('device-item-count');
+            const lastUpdateEl = document.getElementById('last-update-time');
+            
+            if (itemCountEl) {
+                itemCountEl.textContent = inventory.length;
+            }
+            
+            if (lastUpdateEl) {
+                const lastUpdate = localStorage.getItem('abc_last_update');
+                if (lastUpdate) {
+                    const date = new Date(lastUpdate);
+                    lastUpdateEl.textContent = date.toLocaleString();
+                } else if (inventory.length > 0) {
+                    lastUpdateEl.textContent = 'Just now';
+                } else {
+                    lastUpdateEl.textContent = 'No data yet';
+                }
+            }
         }
 
         // Render dashboard table
@@ -1427,15 +1533,28 @@
 
         // Export data
         function exportData() {
+            if (inventory.length === 0) {
+                showAlert('No data to export!', 'error');
+                return;
+            }
+            
             const dataStr = JSON.stringify(inventory, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = 'abc_isfor_xyz_inventory_' + new Date().toISOString().split('T')[0] + '.json';
+            const filename = 'abc_isfor_xyz_inventory_' + new Date().toISOString().split('T')[0] + '.json';
+            link.download = filename;
             link.click();
             URL.revokeObjectURL(url);
-            showAlert('Data exported successfully!', 'success');
+            
+            showAlert('Exported ' + inventory.length + ' items!', 'success');
+            
+            const statusEl = document.getElementById('export-status');
+            if (statusEl) {
+                statusEl.innerHTML = '✅ <strong>File saved:</strong> ' + filename + '<br>📱 <strong>Next step:</strong> Upload this file to GitHub so you can import it on other devices!';
+                statusEl.style.color = '#28a745';
+            }
         }
 
         // Import data
@@ -1494,6 +1613,104 @@
             link.click();
             URL.revokeObjectURL(url);
             showAlert('Report exported to CSV!', 'success');
+        }
+
+        // Generate share link
+        function generateShareLink() {
+            if (inventory.length === 0) {
+                showAlert('No data to share! Add items first.', 'error');
+                return;
+            }
+
+            // Compress and encode the data
+            const dataStr = JSON.stringify(inventory);
+            const encoded = btoa(encodeURIComponent(dataStr));
+            
+            // Create share URL with data in hash
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareUrl = baseUrl + '#share=' + encoded;
+            
+            // Display the share link
+            document.getElementById('share-link-url').value = shareUrl;
+            document.getElementById('share-link-container').style.display = 'block';
+            
+            // Generate QR code
+            const qrContainer = document.getElementById('qr-code-display');
+            qrContainer.innerHTML = ''; // Clear previous QR code
+            
+            new QRCode(qrContainer, {
+                text: shareUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#667eea",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+            
+            showAlert('Share link generated! Send to mobile device.', 'success');
+        }
+
+        // Copy share link to clipboard
+        function copyShareLink() {
+            const linkInput = document.getElementById('share-link-url');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+                document.execCommand('copy');
+                showAlert('Link copied! Paste in email/text.', 'success');
+            } catch (err) {
+                // Fallback for older browsers
+                navigator.clipboard.writeText(linkInput.value).then(function() {
+                    showAlert('Link copied! Paste in email/text.', 'success');
+                }).catch(function() {
+                    showAlert('Please manually copy the link.', 'error');
+                });
+            }
+        }
+
+        // Check for shared data on page load
+        function checkForSharedData() {
+            const hash = window.location.hash;
+            
+            if (hash.startsWith('#share=')) {
+                const encoded = hash.substring(7); // Remove '#share='
+                
+                try {
+                    const decoded = decodeURIComponent(atob(encoded));
+                    const sharedData = JSON.parse(decoded);
+                    
+                    if (Array.isArray(sharedData) && sharedData.length > 0) {
+                        // Show confirmation dialog
+                        const itemCount = sharedData.length;
+                        const message = 'Found ' + itemCount + ' items to import.\n\n' +
+                                      'This will replace your current data (' + inventory.length + ' items).\n\n' +
+                                      'Continue?';
+                        
+                        if (confirm(message)) {
+                            inventory = sharedData;
+                            nextId = Math.max.apply(Math, inventory.map(function(i) { return i.id; }).concat([0])) + 1;
+                            saveInventory();
+                            updateDashboard();
+                            renderInventory();
+                            renderReports();
+                            updateDropdownLists();
+                            
+                            // Clear the hash to prevent re-import on refresh
+                            window.location.hash = '';
+                            
+                            showAlert('Successfully imported ' + itemCount + ' items!', 'success');
+                        } else {
+                            // User declined, clear the hash
+                            window.location.hash = '';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error importing shared data:', error);
+                    showAlert('Error loading shared data. Link may be invalid.', 'error');
+                    window.location.hash = '';
+                }
+            }
         }
 
         // Show alert
