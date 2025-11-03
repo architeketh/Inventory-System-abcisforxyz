@@ -400,57 +400,6 @@
             font-size: 1.1em;
         }
 
-        .category-list {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        @media (min-width: 600px) {
-            .category-list {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (min-width: 900px) {
-            .category-list {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .category-list {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .category-item {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .category-item h4 {
-            color: #333;
-            margin-bottom: 6px;
-            font-size: 1em;
-        }
-
-        .category-item p {
-            color: #666;
-            font-size: 11px;
-            margin: 3px 0;
-        }
-
-        .category-item .total-value {
-            color: #28a745;
-            font-size: 1em;
-            font-weight: 700;
-            margin-top: 6px;
-        }
-
         .export-import-section {
             background: #f8f9fa;
             padding: 15px;
@@ -771,7 +720,20 @@
 
                 <div class="report-section">
                     <h3>By Category</h3>
-                    <div id="category-report" class="category-list"></div>
+                    <div class="table-wrapper">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Items</th>
+                                    <th>In Stock</th>
+                                    <th>Sold</th>
+                                    <th>Total Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="category-report"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="report-section">
@@ -1678,25 +1640,50 @@
                 categoryMap[item.category].totalValue += (item.quantity * item.price);
             });
 
-            const container = document.getElementById('category-report');
-            container.innerHTML = '';
+            const tbody = document.getElementById('category-report');
+            tbody.innerHTML = '';
 
             const sortedCategories = Object.entries(categoryMap).sort(function(a, b) {
                 return b[1].totalValue - a[1].totalValue;
             });
 
+            // Add a totals row data
+            let totalItems = 0;
+            let totalInStock = 0;
+            let totalSold = 0;
+            let totalValue = 0;
+
             sortedCategories.forEach(function(entry) {
                 const category = entry[0];
                 const data = entry[1];
-                const div = document.createElement('div');
-                div.className = 'category-item';
-                div.innerHTML = '<h4>' + category + '</h4>' +
-                    '<p>Items: ' + data.count + '</p>' +
-                    '<p>In Stock: ' + data.inStock + '</p>' +
-                    '<p>Sold: ' + data.sold + '</p>' +
-                    '<p class="total-value">$' + data.totalValue.toFixed(2) + '</p>';
-                container.appendChild(div);
+                
+                totalItems += data.count;
+                totalInStock += data.inStock;
+                totalSold += data.sold;
+                totalValue += data.totalValue;
+
+                const row = document.createElement('tr');
+                row.innerHTML = '<td><strong>' + category + '</strong></td>' +
+                    '<td>' + data.count + '</td>' +
+                    '<td>' + data.inStock + '</td>' +
+                    '<td>' + data.sold + '</td>' +
+                    '<td style="color: #28a745; font-weight: 600;">$' + data.totalValue.toFixed(2) + '</td>';
+                tbody.appendChild(row);
             });
+
+            // Add totals row
+            if (sortedCategories.length > 0) {
+                const totalRow = document.createElement('tr');
+                totalRow.style.borderTop = '2px solid #667eea';
+                totalRow.style.fontWeight = '700';
+                totalRow.style.background = '#f8f9fa';
+                totalRow.innerHTML = '<td><strong>TOTAL</strong></td>' +
+                    '<td><strong>' + totalItems + '</strong></td>' +
+                    '<td><strong>' + totalInStock + '</strong></td>' +
+                    '<td><strong>' + totalSold + '</strong></td>' +
+                    '<td style="color: #28a745;"><strong>$' + totalValue.toFixed(2) + '</strong></td>';
+                tbody.appendChild(totalRow);
+            }
         }
 
         function renderInStockReport() {
