@@ -187,6 +187,11 @@
             background: #e0a800;
         }
 
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
         .inventory-table {
             width: 100%;
             border-collapse: collapse;
@@ -220,11 +225,7 @@
         .action-buttons {
             display: flex;
             gap: 5px;
-        }
-
-        .action-buttons button {
-            padding: 6px 12px;
-            font-size: 12px;
+            flex-wrap: wrap;
         }
 
         .stats-grid {
@@ -332,26 +333,35 @@
 
         .category-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
 
         .category-item {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             border-left: 4px solid #667eea;
         }
 
         .category-item h4 {
             color: #333;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            font-size: 1.3em;
         }
 
         .category-item p {
             color: #666;
             font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .category-item .total-value {
+            color: #28a745;
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-top: 10px;
         }
 
         .export-import-section {
@@ -443,6 +453,10 @@
                     <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                         <h3 id="total-categories">0</h3>
                         <p>Categories</p>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <h3 id="total-value">$0.00</h3>
+                        <p>Total Inventory Value</p>
                     </div>
                 </div>
 
@@ -536,7 +550,7 @@
                 </div>
 
                 <div class="report-section">
-                    <h3>Inventory by Category</h3>
+                    <h3>Inventory by Category (with Total Values)</h3>
                     <div id="category-report" class="category-list"></div>
                 </div>
 
@@ -551,6 +565,7 @@
                                 <th>Brand</th>
                                 <th>Price</th>
                                 <th>Quantity</th>
+                                <th>Total Value</th>
                             </tr>
                         </thead>
                         <tbody id="instock-report-tbody"></tbody>
@@ -568,6 +583,7 @@
                                 <th>Brand</th>
                                 <th>Price</th>
                                 <th>Quantity Sold</th>
+                                <th>Revenue</th>
                             </tr>
                         </thead>
                         <tbody id="sold-report-tbody"></tbody>
@@ -749,11 +765,13 @@
             const inStock = inventory.filter(item => item.quantity > 0).length;
             const totalSold = inventory.reduce((sum, item) => sum + item.sold, 0);
             const categories = [...new Set(inventory.map(item => item.category))].length;
+            const totalValue = inventory.reduce((sum, item) => sum + (item.quantity * item.price), 0);
 
             document.getElementById('total-items').textContent = totalItems;
             document.getElementById('in-stock-items').textContent = inStock;
             document.getElementById('sold-items').textContent = totalSold;
             document.getElementById('total-categories').textContent = categories;
+            document.getElementById('total-value').textContent = '$' + totalValue.toFixed(2);
 
             renderDashboardTable();
         }
@@ -799,10 +817,10 @@
                 ${includeActions ? `
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-info" onclick="showBarcode(${item.id})">Barcode</button>
-                            <button class="btn btn-warning" onclick="openEditModal(${item.id})">Edit</button>
-                            <button class="btn btn-success" onclick="openSellModal(${item.id})" ${item.quantity === 0 ? 'disabled' : ''}>Sell</button>
-                            <button class="btn btn-danger" onclick="deleteItem(${item.id})">Delete</button>
+                            <button class="btn btn-info btn-sm" onclick="showBarcode(${item.id})">Barcode</button>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal(${item.id})">Edit</button>
+                            <button class="btn btn-success btn-sm" onclick="openSellModal(${item.id})" ${item.quantity === 0 ? 'disabled' : ''}>Sell</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Delete</button>
                         </div>
                     </td>
                 ` : `<td>${status}</td>`}
@@ -946,6 +964,7 @@
                 updateDashboard();
                 renderInventory();
                 renderReports();
+                updateCategoryList();
             }
         }
 
@@ -976,17 +995,26 @@
             const categoryMap = {};
             inventory.forEach(item => {
                 if (!categoryMap[item.category]) {
-                    categoryMap[item.category] = { count: 0, inStock: 0, sold: 0 };
+                    categoryMap[item.category] = { 
+                        count: 0, 
+                        inStock: 0, 
+                        sold: 0,
+                        totalValue: 0 
+                    };
                 }
                 categoryMap[item.category].count++;
                 categoryMap[item.category].inStock += item.quantity;
                 categoryMap[item.category].sold += item.sold;
+                categoryMap[item.category].totalValue += (item.quantity * item.price);
             });
 
             const container = document.getElementById('category-report');
             container.innerHTML = '';
 
-            Object.entries(categoryMap).forEach(([category, data]) => {
+            // Sort categories by total value (highest first)
+            const sortedCategories = Object.entries(categoryMap).sort((a, b) => b[1].totalValue - a[1].totalValue);
+
+            sortedCategories.forEach(([category, data]) => {
                 const div = document.createElement('div');
                 div.className = 'category-item';
                 div.innerHTML = `
@@ -994,6 +1022,7 @@
                     <p>Items: ${data.count}</p>
                     <p>In Stock: ${data.inStock}</p>
                     <p>Sold: ${data.sold}</p>
+                    <p class="total-value">Total Value: $${data.totalValue.toFixed(2)}</p>
                 `;
                 container.appendChild(div);
             });
@@ -1004,6 +1033,7 @@
             tbody.innerHTML = '';
 
             inventory.filter(item => item.quantity > 0).forEach(item => {
+                const totalValue = item.quantity * item.price;
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.id}</td>
@@ -1012,6 +1042,7 @@
                     <td>${item.brand}</td>
                     <td>$${item.price.toFixed(2)}</td>
                     <td>${item.quantity}</td>
+                    <td style="color: #28a745; font-weight: 600;">$${totalValue.toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -1022,6 +1053,7 @@
             tbody.innerHTML = '';
 
             inventory.filter(item => item.sold > 0).forEach(item => {
+                const revenue = item.sold * item.price;
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item.id}</td>
@@ -1030,6 +1062,7 @@
                     <td>${item.brand}</td>
                     <td>$${item.price.toFixed(2)}</td>
                     <td>${item.sold}</td>
+                    <td style="color: #28a745; font-weight: 600;">$${revenue.toFixed(2)}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -1123,10 +1156,12 @@
 
         // Export reports to CSV
         function exportReportCSV() {
-            let csv = 'ID,Category,Description,Brand,Price,Quantity,Sold\n';
+            let csv = 'ID,Category,Description,Brand,Price,Quantity,Sold,Inventory Value,Revenue\n';
             
             inventory.forEach(item => {
-                csv += `${item.id},"${item.category}","${item.description}","${item.brand}",${item.price},${item.quantity},${item.sold}\n`;
+                const inventoryValue = (item.quantity * item.price).toFixed(2);
+                const revenue = (item.sold * item.price).toFixed(2);
+                csv += `${item.id},"${item.category}","${item.description}","${item.brand}",${item.price},${item.quantity},${item.sold},${inventoryValue},${revenue}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
