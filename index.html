@@ -130,6 +130,7 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-right: 10px;
+            margin-bottom: 10px;
         }
 
         .btn-primary {
@@ -375,6 +376,31 @@
             margin: 10px 0;
         }
 
+        .barcode-print-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .barcode-print-item {
+            border: 2px dashed #ddd;
+            padding: 15px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .barcode-print-item p {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .barcode-print-item .item-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
         @media print {
             body {
                 background: white;
@@ -389,6 +415,14 @@
 
             .container {
                 box-shadow: none;
+            }
+
+            .barcode-print-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            @page {
+                margin: 0.5in;
             }
         }
 
@@ -413,6 +447,13 @@
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -467,7 +508,7 @@
                 <table class="inventory-table" id="dashboard-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Barcode</th>
                             <th>Category</th>
                             <th>Description</th>
                             <th>Brand</th>
@@ -485,13 +526,20 @@
             <!-- Inventory Tab -->
             <div id="inventory" class="tab-content">
                 <h2 style="margin-bottom: 20px;">Inventory Management</h2>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="printAllBarcodes()">
+                        🖨️ Print All Barcodes
+                    </button>
+                </div>
+
                 <div class="search-box">
                     <input type="text" id="inventory-search" placeholder="Search inventory..." onkeyup="filterInventory()">
                 </div>
                 <table class="inventory-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Barcode</th>
                             <th>Category</th>
                             <th>Description</th>
                             <th>Brand</th>
@@ -559,7 +607,7 @@
                     <table class="inventory-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Barcode</th>
                                 <th>Category</th>
                                 <th>Description</th>
                                 <th>Brand</th>
@@ -577,7 +625,7 @@
                     <table class="inventory-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Barcode</th>
                                 <th>Category</th>
                                 <th>Description</th>
                                 <th>Brand</th>
@@ -702,6 +750,11 @@
         let inventory = JSON.parse(localStorage.getItem('abc_inventory')) || [];
         let nextId = parseInt(localStorage.getItem('abc_next_id')) || 1;
 
+        // Generate 6-digit barcode
+        function generateBarcode(id) {
+            return String(id).padStart(6, '0');
+        }
+
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
             updateDashboard();
@@ -747,10 +800,36 @@
             saveInventory();
             
             document.getElementById('add-item-form').reset();
-            showAlert('Item added successfully!', 'success');
+            showAlert('Item added successfully! Barcode: ' + generateBarcode(item.id), 'success');
             updateDashboard();
             renderInventory();
             updateCategoryList();
+        }
+
+        // Duplicate item
+        function duplicateItem(id) {
+            const item = inventory.find(i => i.id === id);
+            if (!item) return;
+
+            if (confirm(`Duplicate "${item.description}"?\n\nA new item will be created with a new barcode.`)) {
+                const newItem = {
+                    id: nextId++,
+                    category: item.category,
+                    description: item.description + ' (Copy)',
+                    brand: item.brand,
+                    price: item.price,
+                    quantity: item.quantity,
+                    sold: 0,
+                    dateAdded: new Date().toISOString()
+                };
+
+                inventory.push(newItem);
+                saveInventory();
+                showAlert('Item duplicated! New barcode: ' + generateBarcode(newItem.id), 'success');
+                updateDashboard();
+                renderInventory();
+                updateCategoryList();
+            }
         }
 
         // Save inventory to localStorage
@@ -801,13 +880,14 @@
         // Create inventory row
         function createInventoryRow(item, includeActions) {
             const row = document.createElement('tr');
+            const barcode = generateBarcode(item.id);
             
             const status = item.quantity > 0 ? 
                 '<span style="color: green; font-weight: 600;">In Stock</span>' : 
                 '<span style="color: red; font-weight: 600;">Out of Stock</span>';
 
             row.innerHTML = `
-                <td>${item.id}</td>
+                <td><strong>${barcode}</strong></td>
                 <td>${item.category}</td>
                 <td>${item.description}</td>
                 <td>${item.brand}</td>
@@ -819,6 +899,7 @@
                         <div class="action-buttons">
                             <button class="btn btn-info btn-sm" onclick="showBarcode(${item.id})">Barcode</button>
                             <button class="btn btn-warning btn-sm" onclick="openEditModal(${item.id})">Edit</button>
+                            <button class="btn btn-primary btn-sm" onclick="duplicateItem(${item.id})">Duplicate</button>
                             <button class="btn btn-success btn-sm" onclick="openSellModal(${item.id})" ${item.quantity === 0 ? 'disabled' : ''}>Sell</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Delete</button>
                         </div>
@@ -834,15 +915,17 @@
             const item = inventory.find(i => i.id === id);
             if (!item) return;
 
-            document.getElementById('barcode-item-info').textContent = 
-                `${item.description} - ${item.brand} (ID: ${item.id})`;
+            const barcode = generateBarcode(item.id);
 
-            JsBarcode("#barcode", `ABC-${item.id}`, {
+            document.getElementById('barcode-item-info').textContent = 
+                `${item.description} - ${item.brand}`;
+
+            JsBarcode("#barcode", barcode, {
                 format: "CODE128",
                 width: 2,
                 height: 100,
                 displayValue: true,
-                text: `abc_isfor_xyz - ${item.id}`
+                text: barcode
             });
 
             document.getElementById('barcode-modal').classList.add('active');
@@ -871,6 +954,117 @@
             `);
             printWindow.document.close();
             printWindow.print();
+        }
+
+        // Print all barcodes
+        function printAllBarcodes() {
+            if (inventory.length === 0) {
+                showAlert('No items to print barcodes for!', 'error');
+                return;
+            }
+
+            const printWindow = window.open('', '', 'width=900,height=600');
+            let htmlContent = `
+                <html>
+                <head>
+                    <title>Print All Barcodes - abc_isfor_xyz</title>
+                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            padding: 20px;
+                        }
+                        h1 {
+                            text-align: center;
+                            color: #667eea;
+                            margin-bottom: 30px;
+                        }
+                        .barcode-grid {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 20px;
+                        }
+                        .barcode-item {
+                            border: 2px dashed #ddd;
+                            padding: 15px;
+                            text-align: center;
+                            page-break-inside: avoid;
+                        }
+                        .item-name {
+                            font-weight: 600;
+                            font-size: 14px;
+                            margin-bottom: 5px;
+                        }
+                        .item-details {
+                            font-size: 12px;
+                            color: #666;
+                            margin: 3px 0;
+                        }
+                        .barcode-container {
+                            margin: 10px 0;
+                        }
+                        .company-name {
+                            color: #667eea;
+                            font-weight: 600;
+                            font-size: 12px;
+                            margin-top: 5px;
+                        }
+                        @media print {
+                            @page {
+                                margin: 0.5in;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>abc_isfor_xyz - All Inventory Barcodes</h1>
+                    <div class="barcode-grid">
+            `;
+
+            inventory.forEach((item, index) => {
+                const barcode = generateBarcode(item.id);
+                htmlContent += `
+                    <div class="barcode-item">
+                        <div class="item-name">${item.description}</div>
+                        <div class="item-details">${item.brand} - ${item.category}</div>
+                        <div class="item-details">$${item.price.toFixed(2)}</div>
+                        <div class="barcode-container">
+                            <svg id="barcode-${index}"></svg>
+                        </div>
+                        <div class="company-name">abc_isfor_xyz</div>
+                    </div>
+                `;
+            });
+
+            htmlContent += `
+                    </div>
+                    <script>
+            `;
+
+            inventory.forEach((item, index) => {
+                const barcode = generateBarcode(item.id);
+                htmlContent += `
+                    JsBarcode("#barcode-${index}", "${barcode}", {
+                        format: "CODE128",
+                        width: 1.5,
+                        height: 60,
+                        displayValue: true,
+                        fontSize: 12
+                    });
+                `;
+            });
+
+            htmlContent += `
+                        setTimeout(function() {
+                            window.print();
+                        }, 500);
+                    </script>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
         }
 
         // Edit item
@@ -1034,9 +1228,10 @@
 
             inventory.filter(item => item.quantity > 0).forEach(item => {
                 const totalValue = item.quantity * item.price;
+                const barcode = generateBarcode(item.id);
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${item.id}</td>
+                    <td><strong>${barcode}</strong></td>
                     <td>${item.category}</td>
                     <td>${item.description}</td>
                     <td>${item.brand}</td>
@@ -1054,9 +1249,10 @@
 
             inventory.filter(item => item.sold > 0).forEach(item => {
                 const revenue = item.sold * item.price;
+                const barcode = generateBarcode(item.id);
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${item.id}</td>
+                    <td><strong>${barcode}</strong></td>
                     <td>${item.category}</td>
                     <td>${item.description}</td>
                     <td>${item.brand}</td>
@@ -1156,12 +1352,13 @@
 
         // Export reports to CSV
         function exportReportCSV() {
-            let csv = 'ID,Category,Description,Brand,Price,Quantity,Sold,Inventory Value,Revenue\n';
+            let csv = 'Barcode,Category,Description,Brand,Price,Quantity,Sold,Inventory Value,Revenue\n';
             
             inventory.forEach(item => {
+                const barcode = generateBarcode(item.id);
                 const inventoryValue = (item.quantity * item.price).toFixed(2);
                 const revenue = (item.sold * item.price).toFixed(2);
-                csv += `${item.id},"${item.category}","${item.description}","${item.brand}",${item.price},${item.quantity},${item.sold},${inventoryValue},${revenue}\n`;
+                csv += `${barcode},"${item.category}","${item.description}","${item.brand}",${item.price},${item.quantity},${item.sold},${inventoryValue},${revenue}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
