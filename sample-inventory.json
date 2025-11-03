@@ -1,0 +1,152 @@
+[
+  {
+    "id": 1,
+    "category": "Electronics",
+    "description": "Wireless Bluetooth Mouse with Ergonomic Design",
+    "brand": "Logitech",
+    "price": 29.99,
+    "quantity": 50,
+    "sold": 12,
+    "dateAdded": "2025-10-15T10:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "category": "Electronics",
+    "description": "Mechanical Gaming Keyboard RGB LED Backlit",
+    "brand": "Corsair",
+    "price": 89.99,
+    "quantity": 30,
+    "sold": 8,
+    "dateAdded": "2025-10-16T11:30:00.000Z"
+  },
+  {
+    "id": 3,
+    "category": "Clothing",
+    "description": "Men's Cotton T-Shirt Classic Fit",
+    "brand": "Nike",
+    "price": 24.99,
+    "quantity": 100,
+    "sold": 35,
+    "dateAdded": "2025-10-17T09:15:00.000Z"
+  },
+  {
+    "id": 4,
+    "category": "Clothing",
+    "description": "Women's Running Shoes Lightweight",
+    "brand": "Adidas",
+    "price": 79.99,
+    "quantity": 45,
+    "sold": 18,
+    "dateAdded": "2025-10-18T14:20:00.000Z"
+  },
+  {
+    "id": 5,
+    "category": "Home & Kitchen",
+    "description": "Stainless Steel Coffee Maker 12-Cup",
+    "brand": "Cuisinart",
+    "price": 69.99,
+    "quantity": 25,
+    "sold": 10,
+    "dateAdded": "2025-10-19T08:45:00.000Z"
+  },
+  {
+    "id": 6,
+    "category": "Home & Kitchen",
+    "description": "Non-Stick Cookware Set 10-Piece",
+    "brand": "T-fal",
+    "price": 119.99,
+    "quantity": 15,
+    "sold": 6,
+    "dateAdded": "2025-10-20T13:00:00.000Z"
+  },
+  {
+    "id": 7,
+    "category": "Books",
+    "description": "The Art of Programming - Complete Guide",
+    "brand": "O'Reilly",
+    "price": 49.99,
+    "quantity": 40,
+    "sold": 22,
+    "dateAdded": "2025-10-21T10:30:00.000Z"
+  },
+  {
+    "id": 8,
+    "category": "Electronics",
+    "description": "USB-C Hub Multi-Port Adapter",
+    "brand": "Anker",
+    "price": 39.99,
+    "quantity": 60,
+    "sold": 15,
+    "dateAdded": "2025-10-22T15:45:00.000Z"
+  },
+  {
+    "id": 9,
+    "category": "Sports & Outdoors",
+    "description": "Yoga Mat Premium Non-Slip 6mm",
+    "brand": "Manduka",
+    "price": 34.99,
+    "quantity": 55,
+    "sold": 20,
+    "dateAdded": "2025-10-23T09:00:00.000Z"
+  },
+  {
+    "id": 10,
+    "category": "Sports & Outdoors",
+    "description": "Resistance Bands Set with Handles",
+    "brand": "TRX",
+    "price": 29.99,
+    "quantity": 70,
+    "sold": 28,
+    "dateAdded": "2025-10-24T11:15:00.000Z"
+  },
+  {
+    "id": 11,
+    "category": "Beauty & Personal Care",
+    "description": "Moisturizing Face Cream SPF 30",
+    "brand": "Neutrogena",
+    "price": 18.99,
+    "quantity": 80,
+    "sold": 42,
+    "dateAdded": "2025-10-25T12:30:00.000Z"
+  },
+  {
+    "id": 12,
+    "category": "Beauty & Personal Care",
+    "description": "Electric Toothbrush Rechargeable",
+    "brand": "Oral-B",
+    "price": 59.99,
+    "quantity": 35,
+    "sold": 14,
+    "dateAdded": "2025-10-26T14:00:00.000Z"
+  },
+  {
+    "id": 13,
+    "category": "Toys & Games",
+    "description": "Building Blocks Set 500 Pieces",
+    "brand": "LEGO",
+    "price": 44.99,
+    "quantity": 48,
+    "sold": 25,
+    "dateAdded": "2025-10-27T10:45:00.000Z"
+  },
+  {
+    "id": 14,
+    "category": "Toys & Games",
+    "description": "Board Game Strategy Edition",
+    "brand": "Hasbro",
+    "price": 32.99,
+    "quantity": 40,
+    "sold": 18,
+    "dateAdded": "2025-10-28T13:20:00.000Z"
+  },
+  {
+    "id": 15,
+    "category": "Office Supplies",
+    "description": "Wireless Printer All-in-One Color",
+    "brand": "HP",
+    "price": 149.99,
+    "quantity": 20,
+    "sold": 7,
+    "dateAdded": "2025-10-29T09:30:00.000Z"
+  }
+]
