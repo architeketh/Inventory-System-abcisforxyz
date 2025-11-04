@@ -918,6 +918,37 @@
         </div>
     </div>
 
+    <!-- Return Modal -->
+    <div id="return-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Return Item to Inventory</h2>
+                <button class="close-btn" onclick="closeReturnModal()">&times;</button>
+            </div>
+            <form id="return-form" onsubmit="recordReturn(event)">
+                <input type="hidden" id="return-id">
+                <div class="form-group">
+                    <label>Item: <strong id="return-item-name"></strong></label>
+                </div>
+                <div class="form-group">
+                    <label>Units Sold: <strong id="return-sold"></strong></label>
+                </div>
+                <div class="form-group">
+                    <label>Current Stock: <strong id="return-current-stock"></strong></label>
+                </div>
+                <div class="form-group">
+                    <label for="return-quantity">Quantity to Return *</label>
+                    <input type="number" id="return-quantity" min="1" required>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: -8px; margin-bottom: 15px;">
+                    💡 This will add items back to stock and reduce the sold count
+                </p>
+                <button type="submit" class="btn btn-warning">Return to Inventory</button>
+                <button type="button" class="btn btn-secondary" onclick="closeReturnModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Barcode Modal -->
     <div id="barcode-modal" class="modal">
         <div class="modal-content">
@@ -1310,6 +1341,13 @@
                 sellBtn.onclick = function() { openSellModal(item.id); };
                 actionsDiv.appendChild(sellBtn);
 
+                const returnBtn = document.createElement('button');
+                returnBtn.className = 'btn btn-warning btn-sm';
+                returnBtn.textContent = 'Return';
+                returnBtn.disabled = item.sold === 0;
+                returnBtn.onclick = function() { openReturnModal(item.id); };
+                actionsDiv.appendChild(returnBtn);
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'btn btn-danger btn-sm';
                 deleteBtn.textContent = 'Del';
@@ -1326,10 +1364,13 @@
         }
 
         // Show barcode
+        let currentBarcodeItem = null; // Store current item for printing
+        
         function showBarcode(id) {
             const item = inventory.find(i => i.id === id);
             if (!item) return;
 
+            currentBarcodeItem = item; // Store for print function
             const barcode = generateBarcode(item.id);
 
             document.getElementById('barcode-item-info').textContent = 
@@ -1354,6 +1395,7 @@
 
         function closeBarcodeModal() {
             document.getElementById('barcode-modal').classList.remove('active');
+            currentBarcodeItem = null;
         }
 
         function printBarcodes() {
@@ -1364,9 +1406,14 @@
                 return;
             }
 
+            if (!currentBarcodeItem) {
+                showAlert('Error: Item data not found', 'error');
+                return;
+            }
+
             // Get current barcode info
-            const barcodeInfo = document.getElementById('barcode-item-info').textContent;
-            const barcodeSvg = document.getElementById('barcode').outerHTML;
+            const item = currentBarcodeItem;
+            const barcode = generateBarcode(item.id);
             
             const printWindow = window.open('', '', 'width=800,height=600');
             printWindow.document.write('<html><head><title>Print Barcodes</title>');
@@ -1375,34 +1422,47 @@
             printWindow.document.write('h2 { text-align: center; color: #667eea; margin-bottom: 30px; }');
             printWindow.document.write('.barcode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }');
             printWindow.document.write('.barcode-item { border: 2px dashed #ddd; padding: 15px; text-align: center; page-break-inside: avoid; }');
-            printWindow.document.write('.item-info { font-weight: 600; font-size: 13px; margin-bottom: 10px; word-wrap: break-word; }');
+            printWindow.document.write('.item-info { font-weight: 600; font-size: 13px; margin-bottom: 5px; word-wrap: break-word; }');
+            printWindow.document.write('.item-price { font-size: 14px; color: #28a745; font-weight: 700; margin: 5px 0; }');
+            printWindow.document.write('.item-brand { font-size: 11px; color: #666; margin-bottom: 8px; }');
             printWindow.document.write('.barcode-container { margin: 10px 0; }');
-            printWindow.document.write('.barcode-container svg { max-width: 100%; height: auto; }');
             printWindow.document.write('.company-name { color: #667eea; font-weight: 600; font-size: 12px; margin-top: 5px; }');
             printWindow.document.write('@media print { @page { margin: 0.5in; } .no-print { display: none; } }');
-            printWindow.document.write('</style></head><body>');
+            printWindow.document.write('</style>');
+            printWindow.document.write('<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></scr' + 'ipt>');
+            printWindow.document.write('</head><body>');
             printWindow.document.write('<h2 class="no-print">abc_isfor_xyz - Printing ' + printQuantity + ' Barcode(s)</h2>');
             printWindow.document.write('<div class="barcode-grid">');
 
             // Generate the specified number of barcodes
             for (let i = 0; i < printQuantity; i++) {
                 printWindow.document.write('<div class="barcode-item">');
-                printWindow.document.write('<div class="item-info">' + barcodeInfo + '</div>');
+                printWindow.document.write('<div class="item-info">' + item.description + '</div>');
+                printWindow.document.write('<div class="item-brand">' + item.brand + '</div>');
+                printWindow.document.write('<div class="item-price">$' + item.price.toFixed(2) + '</div>');
                 printWindow.document.write('<div class="barcode-container">');
-                printWindow.document.write(barcodeSvg);
+                printWindow.document.write('<svg id="barcode-' + i + '"></svg>');
                 printWindow.document.write('</div>');
                 printWindow.document.write('<div class="company-name">abc_isfor_xyz</div>');
                 printWindow.document.write('</div>');
             }
 
             printWindow.document.write('</div>');
-            printWindow.document.write('</body></html>');
+            printWindow.document.write('<scr' + 'ipt>');
+            printWindow.document.write('window.onload = function() {');
+            for (let i = 0; i < printQuantity; i++) {
+                printWindow.document.write('JsBarcode("#barcode-' + i + '", "' + barcode + '", {');
+                printWindow.document.write('format: "CODE128",');
+                printWindow.document.write('width: 2,');
+                printWindow.document.write('height: 70,');
+                printWindow.document.write('displayValue: true,');
+                printWindow.document.write('fontSize: 12');
+                printWindow.document.write('});');
+            }
+            printWindow.document.write('setTimeout(function() { window.print(); }, 500);');
+            printWindow.document.write('};');
+            printWindow.document.write('</scr' + 'ipt></body></html>');
             printWindow.document.close();
-            
-            // Auto-print after a short delay
-            setTimeout(function() {
-                printWindow.print();
-            }, 500);
             
             showAlert('Preparing to print ' + printQuantity + ' barcode(s)...', 'success');
         }
@@ -1543,6 +1603,47 @@
                 closeSellModal();
             } else {
                 showAlert('Invalid quantity!', 'error');
+            }
+        }
+
+        // Return item
+        function openReturnModal(id) {
+            const item = inventory.find(i => i.id === id);
+            if (!item || item.sold === 0) return;
+
+            document.getElementById('return-id').value = item.id;
+            document.getElementById('return-item-name').textContent = item.description + ' - ' + item.brand;
+            document.getElementById('return-sold').textContent = item.sold;
+            document.getElementById('return-current-stock').textContent = item.quantity;
+            document.getElementById('return-quantity').max = item.sold;
+            document.getElementById('return-quantity').value = 1;
+
+            document.getElementById('return-modal').classList.add('active');
+        }
+
+        function closeReturnModal() {
+            document.getElementById('return-modal').classList.remove('active');
+        }
+
+        function recordReturn(event) {
+            event.preventDefault();
+            
+            const id = parseInt(document.getElementById('return-id').value);
+            const quantity = parseInt(document.getElementById('return-quantity').value);
+            const item = inventory.find(i => i.id === id);
+            
+            if (item && quantity <= item.sold) {
+                item.quantity += quantity;
+                item.sold -= quantity;
+
+                saveInventory();
+                showAlert('Return recorded! ' + quantity + ' unit(s) returned to inventory.', 'success');
+                updateDashboard();
+                renderInventory();
+                renderReports();
+                closeReturnModal();
+            } else {
+                showAlert('Invalid quantity! Cannot return more than sold.', 'error');
             }
         }
 
