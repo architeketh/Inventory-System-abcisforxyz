@@ -6,6 +6,7 @@
     <title>abc_isfor_xyz - Inventory Management System</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -829,19 +830,51 @@
                 </div>
 
                 <div class="export-import-section">
-                    <h3>💾 Export Data</h3>
-                    <p style="margin: 8px 0; color: #666;">Download inventory as JSON to save on GitHub or backup locally.</p>
-                    <button class="btn btn-primary" onclick="exportData()">Export to JSON</button>
-                    <p id="export-status" style="margin-top: 8px; font-size: 12px; color: #666;"></p>
+                    <h3>📊 Export to Excel / CSV</h3>
+                    <p style="margin: 8px 0; color: #666;">Download inventory for Excel, Google Sheets, or other spreadsheet apps.</p>
+                    <div class="button-group">
+                        <button class="btn btn-success" onclick="exportToExcel()">📗 Export to Excel (.xlsx)</button>
+                        <button class="btn btn-success" onclick="exportToCSV()">📄 Export to CSV</button>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 11px; color: #666;">
+                        ✅ Includes: Barcode, Category, Description, Brand, Price, Quantity, Sold
+                    </p>
                 </div>
 
                 <div class="export-import-section">
-                    <h3>📂 Import Data</h3>
-                    <p style="margin: 8px 0; color: #666;">Import inventory from JSON file stored on GitHub or local device.</p>
+                    <h3>📂 Import from Excel / CSV</h3>
+                    <p style="margin: 8px 0; color: #666;">Import inventory from Excel or CSV files.</p>
                     <div class="file-input">
+                        <input type="file" id="import-excel-csv-file" accept=".xlsx,.xls,.csv">
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                            <input type="radio" name="import-mode" value="replace" checked> 
+                            <span>Replace all data (clears existing inventory)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 5px;">
+                            <input type="radio" name="import-mode" value="append"> 
+                            <span>Append data (add to existing inventory)</span>
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" onclick="importExcelCSV()">📥 Import from Excel/CSV</button>
+                    <p style="margin-top: 8px; font-size: 11px; color: #666;">
+                        💡 <strong>Required columns:</strong> Category, Description, Brand, Price, Quantity<br>
+                        📝 <strong>Optional:</strong> Barcode, Sold
+                    </p>
+                </div>
+
+                <div class="export-import-section">
+                    <h3>💾 Export / Import JSON (Backup)</h3>
+                    <p style="margin: 8px 0; color: #666;">Download/upload complete inventory backup as JSON.</p>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="exportData()">Export to JSON</button>
+                        <button class="btn btn-success" onclick="importData()">Import from JSON</button>
+                    </div>
+                    <div class="file-input" style="margin-top: 10px;">
                         <input type="file" id="import-file" accept=".json">
                     </div>
-                    <button class="btn btn-success" onclick="importData()">Import from JSON</button>
+                    <p id="export-status" style="margin-top: 8px; font-size: 12px; color: #666;"></p>
                 </div>
 
                 <div class="export-import-section">
@@ -1915,6 +1948,273 @@
             link.click();
             URL.revokeObjectURL(url);
             showAlert('Report exported to CSV!', 'success');
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            if (inventory.length === 0) {
+                showAlert('No data to export!', 'error');
+                return;
+            }
+
+            // Prepare data for Excel
+            const data = inventory.map(function(item) {
+                return {
+                    'Barcode': generateBarcode(item.id),
+                    'Category': item.category,
+                    'Description': item.description,
+                    'Brand': item.brand,
+                    'Price': item.price,
+                    'Quantity': item.quantity,
+                    'Sold': item.sold,
+                    'Inventory Value': item.quantity * item.price,
+                    'Revenue': item.sold * item.price,
+                    'Date Added': item.dateAdded ? new Date(item.dateAdded).toLocaleDateString() : ''
+                };
+            });
+
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            // Set column widths
+            ws['!cols'] = [
+                {wch: 10}, // Barcode
+                {wch: 15}, // Category
+                {wch: 30}, // Description
+                {wch: 15}, // Brand
+                {wch: 10}, // Price
+                {wch: 10}, // Quantity
+                {wch: 10}, // Sold
+                {wch: 15}, // Inventory Value
+                {wch: 15}, // Revenue
+                {wch: 12}  // Date Added
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+            
+            // Generate filename with date
+            const filename = 'abc_isfor_xyz_inventory_' + new Date().toISOString().split('T')[0] + '.xlsx';
+            
+            // Save file
+            XLSX.writeFile(wb, filename);
+            
+            showAlert('Exported ' + inventory.length + ' items to Excel!', 'success');
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if (inventory.length === 0) {
+                showAlert('No data to export!', 'error');
+                return;
+            }
+
+            let csv = 'Barcode,Category,Description,Brand,Price,Quantity,Sold,Inventory Value,Revenue,Date Added\n';
+            
+            inventory.forEach(function(item) {
+                const barcode = generateBarcode(item.id);
+                const inventoryValue = (item.quantity * item.price).toFixed(2);
+                const revenue = (item.sold * item.price).toFixed(2);
+                const dateAdded = item.dateAdded ? new Date(item.dateAdded).toLocaleDateString() : '';
+                
+                csv += barcode + ',"' + item.category + '","' + item.description + '","' + item.brand + '",' + 
+                       item.price + ',' + item.quantity + ',' + item.sold + ',' + inventoryValue + ',' + revenue + ',"' + dateAdded + '"\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'abc_isfor_xyz_inventory_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            showAlert('Exported ' + inventory.length + ' items to CSV!', 'success');
+        }
+
+        // Import from Excel or CSV
+        function importExcelCSV() {
+            const fileInput = document.getElementById('import-excel-csv-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showAlert('Please select a file to import.', 'error');
+                return;
+            }
+
+            const importMode = document.querySelector('input[name="import-mode"]:checked').value;
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    let importedData = [];
+                    
+                    // Check file type
+                    if (file.name.endsWith('.csv')) {
+                        // Parse CSV
+                        importedData = parseCSV(e.target.result);
+                    } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                        // Parse Excel
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                        importedData = parseExcelData(jsonData);
+                    } else {
+                        throw new Error('Unsupported file type');
+                    }
+
+                    if (importedData.length === 0) {
+                        throw new Error('No valid data found in file');
+                    }
+
+                    // Validate required fields
+                    const missingFields = validateImportData(importedData);
+                    if (missingFields.length > 0) {
+                        throw new Error('Missing required fields: ' + missingFields.join(', '));
+                    }
+
+                    // Confirm import
+                    const message = 'Import ' + importedData.length + ' items?\n\n' +
+                                  'Mode: ' + (importMode === 'replace' ? 'Replace all data' : 'Append to existing') + '\n' +
+                                  (importMode === 'replace' ? 'Current data (' + inventory.length + ' items) will be deleted.' : 'Will add to existing ' + inventory.length + ' items.') + '\n\n' +
+                                  'Continue?';
+
+                    if (confirm(message)) {
+                        if (importMode === 'replace') {
+                            inventory = importedData;
+                            nextId = Math.max.apply(Math, inventory.map(function(i) { return i.id; }).concat([0])) + 1;
+                        } else {
+                            // Append mode
+                            importedData.forEach(function(item) {
+                                item.id = nextId++;
+                                inventory.push(item);
+                            });
+                        }
+
+                        saveInventory();
+                        updateDashboard();
+                        renderInventory();
+                        renderReports();
+                        updateDropdownLists();
+                        
+                        showAlert('Successfully imported ' + importedData.length + ' items!', 'success');
+                        fileInput.value = ''; // Clear file input
+                    }
+                } catch (error) {
+                    console.error('Import error:', error);
+                    showAlert('Error: ' + error.message, 'error');
+                }
+            };
+
+            // Read file based on type
+            if (file.name.endsWith('.csv')) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        // Parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                const values = parseCSVLine(lines[i]);
+                const item = {};
+                
+                headers.forEach(function(header, index) {
+                    item[header] = values[index] || '';
+                });
+                
+                data.push(convertToInventoryItem(item));
+            }
+
+            return data;
+        }
+
+        // Parse CSV line handling quotes
+        function parseCSVLine(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            values.push(current.trim());
+            return values;
+        }
+
+        // Parse Excel data
+        function parseExcelData(jsonData) {
+            return jsonData.map(function(row) {
+                return convertToInventoryItem(row);
+            });
+        }
+
+        // Convert imported row to inventory item
+        function convertToInventoryItem(row) {
+            // Handle different column name variations
+            const category = row.Category || row.category || '';
+            const description = row.Description || row.description || row.Item || row.item || '';
+            const brand = row.Brand || row.brand || '';
+            const price = parseFloat(row.Price || row.price || 0);
+            const quantity = parseInt(row.Quantity || row.quantity || row.Qty || row.qty || 0);
+            const sold = parseInt(row.Sold || row.sold || 0);
+            const barcode = row.Barcode || row.barcode || '';
+
+            // Generate ID from barcode if provided, otherwise use nextId
+            let id = nextId;
+            if (barcode && barcode.length === 6) {
+                const barcodeId = parseInt(barcode);
+                if (!isNaN(barcodeId)) {
+                    id = barcodeId;
+                }
+            }
+
+            return {
+                id: id,
+                category: category,
+                description: description,
+                brand: brand,
+                price: price,
+                quantity: quantity,
+                sold: sold,
+                dateAdded: new Date().toISOString()
+            };
+        }
+
+        // Validate import data has required fields
+        function validateImportData(data) {
+            const required = ['category', 'description', 'brand'];
+            const missing = [];
+
+            data.forEach(function(item) {
+                required.forEach(function(field) {
+                    if (!item[field] || item[field] === '') {
+                        if (missing.indexOf(field) === -1) {
+                            missing.push(field);
+                        }
+                    }
+                });
+            });
+
+            return missing;
         }
 
         // Generate share link
